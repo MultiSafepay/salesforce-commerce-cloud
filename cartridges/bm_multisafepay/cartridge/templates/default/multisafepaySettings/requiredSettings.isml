@@ -1,0 +1,82 @@
+<iscomment>
+    Included fragment of multisafepaySettings/settings. It must not declare its own
+    content-type directive or run an inline server script here: doing so interfered
+    with the new Business Manager page initialization (the "Application State JSON is
+    not present in DOM" error). The Group Card Methods value is resolved in the
+    controller and passed as pdict.groupCardsEnabled.
+</iscomment>
+<div id="requiredSettings" class="card bg-white mt-4">
+   <div class="card-body">
+      <h5 class="card-title mb-0">
+         Account settings
+      </h5>
+      <div class="mt-3">
+         <div class="form-group">
+            <label class="form-title mb-0" for="mode">Environment</label>
+            <h7 id="modeHelp" class="form-text mb-1">Use the "Test" option in order to connect to your <a class="text-primary" href="https://testmerchant.multisafepay.com/" target="_blank">Multisafepay test environment</a>. Use live to connect to your <a class="text-primary" href="https://merchant.multisafepay.com/" target="_blank">Multisafepay Live environment</a>.</h7>
+            <div class="radio-buttons">
+               <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="Multisafepay_Environment" id="testRadio" value="test" ${dw.system.Site.current.preferences.custom.Multisafepay_Environment == 'test' ? 'checked': ''}>
+                  <label class="form-check-label" for="testRadio">Test</label>
+               </div>
+               <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="Multisafepay_Environment" id="productionRadio" value="live" ${dw.system.Site.current.preferences.custom.Multisafepay_Environment == 'live' ? 'checked': ''}>
+                  <label class="form-check-label" for="productionRadio">Live</label>
+               </div>
+            </div>
+         </div>
+         <div class="form-group">
+            <label class="form-title mb-0" for="testApiKey">Multisafepay Test API Key</label>
+            <small id="testApiKeyHelp" class="form-text mb-1">
+            <a class="text-primary" href="https://docs.multisafepay.com/docs/sites" target="_blank">How to set up your API key?</a> 
+            Used when Environment is set to <strong>Test</strong>.
+            </small>
+            <div class="input-fields">
+               <input type="text" class="form-control" name="Multisafepay_TestApiKey" id="testApiKey" aria-describedby="testApiKeyHelp" placeholder="" value="${dw.system.Site.current.preferences.custom.Multisafepay_TestApiKey || ''}">
+            </div>
+         </div>
+         <div class="form-group">
+            <label class="form-title mb-0" for="liveApiKey">Multisafepay Live API Key</label>
+            <small id="liveApiKeyHelp" class="form-text mb-1">
+            Used when Environment is set to <strong>Live</strong>.
+            </small>
+            <div class="input-fields">
+               <input type="text" class="form-control" name="Multisafepay_LiveApiKey" id="liveApiKey" aria-describedby="liveApiKeyHelp" placeholder="" value="${dw.system.Site.current.preferences.custom.Multisafepay_LiveApiKey || ''}">
+            </div>
+         </div>
+         <div class="form-group">
+            <label class="form-title mb-0" for="capture">Multisafepay OMS Salesforce</label>
+            <div class="row">
+               <small id="captureHelp" class="col form-text mb-1">
+                  Is your system integrated with Salesforce OMS?
+               </small>
+               <div class="col input-fields">
+                  <input type="checkbox" name="Multisafepay_OMSOption" id="oms" aria-describedby="omsHelp" ${dw.system.Site.current.preferences.custom.Multisafepay_OMSOption == true ? 'checked': ''}>
+               </div>
+            </div>
+         </div>
+         <div class="form-group">
+            <label class="form-title mb-0" for="manualCapture">Manual Capture</label>
+            <div class="row">
+               <small id="manualCaptureHelp" class="col form-text mb-1">
+                  Enable manual capture for payment methods that support it. When enabled, payments will be authorized but not captured automatically — use the Capture button in the order detail to capture.
+               </small>
+               <div class="col input-fields">
+                  <input type="checkbox" name="Multisafepay_ManualCapture" id="manualCapture" aria-describedby="manualCaptureHelp" ${dw.system.Site.current.preferences.custom.Multisafepay_ManualCapture == true ? 'checked': ''}>
+               </div>
+            </div>
+         </div>
+         <div class="form-group">
+            <label class="form-title mb-0" for="groupCards">Group Card Methods</label>
+            <div class="row">
+               <small id="groupCardsHelp" class="col form-text mb-1">
+                  When enabled, card schemes (Visa, Mastercard, Amex, Maestro) are grouped into a single "Credit Card" method (group_cards=1). When disabled, each card scheme is shown individually. Re-run "Sync &amp; Import" after changing this so the payment methods are rebuilt.
+               </small>
+               <div class="col input-fields">
+                  <input type="checkbox" name="Multisafepay_GroupCards" id="groupCards" aria-describedby="groupCardsHelp" ${pdict.groupCardsEnabled ? 'checked': ''}>
+               </div>
+            </div>
+         </div>
+      </div>
+   </div>
+</div>

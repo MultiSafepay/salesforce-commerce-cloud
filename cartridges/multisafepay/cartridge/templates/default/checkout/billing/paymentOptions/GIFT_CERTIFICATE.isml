@@ -1,0 +1,12 @@
+<div class="py-3">
+    <div class="mb-3">
+        <label class="form-control-label" for="giftCertCode">
+            GIFT CARD
+        </label>
+        <input data-missing-error="This field is required." type="text" class="form-control" id="giftCertCode" placeholder="Enter the gift card code here" encoding="off" />
+        <div class="invalid-feedback">You must complete the field in order to redeem a gift card.</div>
+        <div class="gift-cert-error text-danger"></div>
+    </div>
+    <button class="btn btn-primary btn-block btn-add-giftcert" id="add-giftcert"> APPLY </button>
+</div>
+<isinclude template="checkout/billing/paymentOptions/giftCertificates" />

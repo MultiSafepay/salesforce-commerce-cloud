@@ -1,0 +1,85 @@
+<form action="${URLUtils.https('Cart-AddCoupon')}" class="promo-code-form" method="GET" name="promo-code-form">
+    <div class="form-group">
+        <label for="couponCode">${Resource.msg('label.promo.code','cart',null)}</label>
+        <div class="row">
+            <div class="col-7">
+                <input type="text" class="form-control coupon-code-field" id="couponCode" name="couponCode" placeholder="${Resource.msg('placholder.text.promo.code.input','cart',null)}">
+                <div class="coupon-error">
+                    <span class="coupon-missing-error" id="missingCouponCode" role="alert"></span>
+                    <span class="coupon-error-message" id="invalidCouponCode" role="alert"></span>
+                </div>
+            </div>
+
+            <input type="hidden" name="${pdict.csrf.tokenName}" value="${pdict.csrf.token}"/>
+
+            <div class="col-5 promo-code-submit">
+                <button type="submit" class="btn btn-primary btn-block promo-code-btn">
+                    ${Resource.msg('button.submit.promo.code','cart',null)}
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="coupons-and-promos">
+    <isloop items="${pdict.order.totals.discounts}" var="discount">
+        <isif condition="${discount.type === 'coupon'}">
+            <div class="coupon-price-adjustment coupon-uuid-${discount.UUID}"
+                data-uuid="${discount.UUID}">
+                <div class="coupon-code">${discount.couponCode} -
+                    <isif condition="${discount.applied}">
+                        <span class="coupon-applied">${Resource.msg('msg.coupon.applied','cart',null)}</span>
+                    <iselse/>
+                        <span class="coupon-not-applied">${Resource.msg('msg.coupon.not.applied','cart',null)}</span>
+                    </isif>
+                    <button type="button" class="float-right remove-coupon"
+                            data-code="${discount.couponCode}"
+                            aria-label="${Resource.msgf('text.remove.coupon','cart', null, discount.couponCode)}"
+                            data-toggle="modal"
+                            data-target="#removeCouponModal"
+                            data-uuid="${discount.UUID}">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <ul class="coupon-promotion-relationship">
+                    <isloop items="${discount.relationship}" var="relatedPromotion">
+
+                        <isif condition="${relatedPromotion.callOutMsg}">
+                            <li>
+                                <isprint value="${relatedPromotion.callOutMsg}" encoding="off"/>
+                            </li>
+                        </isif>
+                    </isloop>
+                </ul>
+            </div>
+        <iselse/>
+            <div class="promotion-information">
+                <span class="promotion-name">${discount.lineItemText}</span>
+                <span class="applied-promotion-discount">${discount.price}</span>
+            </div>
+        </isif>
+    </isloop>
+</div>
+
+<div class="modal fade" id="removeCouponModal" tabindex="-1" role="dialog" aria-labelledby="removeCouponLineItemModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header delete-coupon-confirmation-header">
+                <h2 class="modal-title" id="removeCouponLineItemModal">${Resource.msg('heading.remove.coupon.confirmation.modal','cart',null)}</h2>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body delete-coupon-confirmation-body">
+                ${Resource.msg('msg.remove.coupon.confirmation.modal','cart',null)}
+                <p class="coupon-to-remove"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" data-dismiss="modal">${Resource.msg('button.cancel','cart',null)}</button>
+                <button type="button" class="btn btn-primary delete-coupon-confirmation-btn"
+                        data-dismiss="modal"
+                        data-action="${URLUtils.https('Cart-RemoveCouponLineItem')}">
+                    ${Resource.msg('button.confirm','cart',null)}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

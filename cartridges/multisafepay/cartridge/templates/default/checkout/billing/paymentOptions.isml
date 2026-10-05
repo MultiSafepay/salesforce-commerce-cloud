@@ -1,0 +1,18 @@
+<fieldset class="payment-options-block">
+    <isset name="creditFields" value="${pdict.forms.billingForm.creditCardFields}" scope="page" />
+    <isset name="mspPaymentOptionID" value="${''}" scope="page" />
+    <isloop items="${pdict.order.billing.payment.applicablePaymentMethods}" var="paymentOption">
+        <isif condition="${paymentOption.ID === 'BML'}">
+            <isinclude template="checkout/billing/paymentOptions/BML" />
+        <iselseif condition="${paymentOption.ID === 'GIFT_CERTIFICATE'}">
+            <isinclude template="checkout/billing/paymentOptions/GIFT_CERTIFICATE" />
+        <iselseif condition="${!mspPaymentOptionID && (paymentOption.ID === 'MultiSafepayPayment' || paymentOption.ID.indexOf('MSP_') === 0)}">
+            <isset name="mspPaymentOptionID" value="${paymentOption.ID}" scope="page" />
+        </isif>
+    </isloop>
+    <isif condition="${mspPaymentOptionID}">
+        <isinclude template="checkout/billing/paymentOptions/Multisafepay" />
+    </isif>
+</fieldset>
+<input type="text" class="form-control cardNumber" style="display:none" id="cardNumber" name="${creditFields.cardNumber.htmlName}">
+<input type="hidden" class="form-control" id="cardType" name="${creditFields.cardType.htmlName}">

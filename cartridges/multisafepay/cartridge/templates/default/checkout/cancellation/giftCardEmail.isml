@@ -1,0 +1,6 @@
+<body>
+    <div>We are sorry that your order was not completed successfully. </div>
+    <div>A Gift Certificate has been issued to you in the amount of ${pdict.amount}.</div>
+    <div>Your gift certificate code is ${pdict.giftCertificateCode}. </div>
+    <div>You can redeem your gift certificate at our online store. </div>
+</body>

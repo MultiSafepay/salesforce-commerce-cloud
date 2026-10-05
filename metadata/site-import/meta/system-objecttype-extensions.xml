@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata xmlns="http://www.demandware.com/xml/impex/metadata/2006-10-31">
+
+    <!-- ===== SitePreferences: new attributes ===== -->
+    <type-extension type-id="SitePreferences">
+        <custom-attribute-definitions>
+            <attribute-definition attribute-id="Multisafepay_TestApiKey">
+                <display-name xml:lang="x-default">Multisafepay Test API Key</display-name>
+                <description xml:lang="x-default">API Key used when Environment is set to Test.</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="Multisafepay_LiveApiKey">
+                <display-name xml:lang="x-default">Multisafepay Live API Key</display-name>
+                <description xml:lang="x-default">API Key used when Environment is set to Live.</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="Multisafepay_ManualCapture">
+                <display-name xml:lang="x-default">Multisafepay Manual Capture</display-name>
+                <description xml:lang="x-default">When enabled, payments are authorized but not captured automatically. Use the Capture button in order detail to capture.</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="Multisafepay_GroupCards">
+                <display-name xml:lang="x-default">Group Card Methods</display-name>
+                <description xml:lang="x-default">When enabled, card schemes (Visa, Mastercard, Amex, Maestro) are grouped into a single "Credit Card" method (group_cards=1). When disabled, each card scheme is shown individually (group_cards=0). Controls the value sent to the MultiSafepay payment-methods API.</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <default-value>false</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="Multisafepay_OCAPI_ClientId">
+                <display-name xml:lang="x-default">OCAPI Client ID</display-name>
+                <description xml:lang="x-default">Account Manager API Client ID used to trigger the Payment Methods import job automatically. Leave empty to disable auto-import.</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="Multisafepay_OCAPI_ClientSecret">
+                <display-name xml:lang="x-default">OCAPI Client Secret</display-name>
+                <description xml:lang="x-default">Account Manager API Client Secret. Used together with Client ID to obtain an access token for job execution.</description>
+                <type>password</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+        </custom-attribute-definitions>
+        <group-definitions>
+            <attribute-group group-id="Multisafepay">
+                <display-name xml:lang="x-default">Multisafepay Account Settings</display-name>
+                <attribute attribute-id="Multisafepay_Environment"/>
+                <attribute attribute-id="Multisafepay_TestApiKey"/>
+                <attribute attribute-id="Multisafepay_LiveApiKey"/>
+                <attribute attribute-id="Multisafepay_ClientKey"/>
+                <attribute attribute-id="Multisafepay_OMSOption"/>
+                <attribute attribute-id="Multisafepay_ManualCapture"/>
+                <attribute attribute-id="Multisafepay_GroupCards"/>
+                <attribute attribute-id="Multisafepay_OCAPI_ClientId"/>
+                <attribute attribute-id="Multisafepay_OCAPI_ClientSecret"/>
+            </attribute-group>
+        </group-definitions>
+    </type-extension>
+
+    <!-- ===== Order: BNPL shipment notification tracking (REQ-2.1.6) ===== -->
+    <type-extension type-id="Order">
+        <custom-attribute-definitions>
+            <attribute-definition attribute-id="Multisafepay_ShipmentNotified">
+                <display-name xml:lang="x-default">Multisafepay Shipment Notified</display-name>
+                <description xml:lang="x-default">Set to true once the shipment has been notified to MultiSafepay (triggers BNPL financial-status update). Prevents duplicate notifications.</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>true</externally-managed-flag>
+            </attribute-definition>
+        </custom-attribute-definitions>
+    </type-extension>
+
+    <!-- ===== PaymentTransaction: capture tracking ===== -->
+    <type-extension type-id="PaymentTransaction">
+        <custom-attribute-definitions>
+            <attribute-definition attribute-id="Multisafepay_CapturedAt">
+                <display-name xml:lang="x-default">Multisafepay Captured At</display-name>
+                <description xml:lang="x-default">ISO timestamp of when the payment was captured.</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>true</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="Multisafepay_FinancialStatus">
+                <display-name xml:lang="x-default">Multisafepay Financial Status</display-name>
+                <description xml:lang="x-default">MSP financial (transaction) status from the webhook, e.g. 'initialized' while awaiting manual capture, 'completed' once captured. Distinct from the order status.</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>true</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="Multisafepay_CaptureExpiry">
+                <display-name xml:lang="x-default">Multisafepay Capture Expiry</display-name>
+                <description xml:lang="x-default">Deadline reported by MSP by which an authorized (manual capture) payment must be captured; after it the authorization is released. Shown in the order Payment tab (REQ-2.2.2).</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>true</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="Multisafepay_PaymentBreakdown">
+                <display-name xml:lang="x-default">Multisafepay Payment Breakdown</display-name>
+                <description xml:lang="x-default">JSON array of the payment_methods reported by MSP (type + amount), used to display coupon/gift-card + payment-method breakdowns applied on the MSP hosted page (ADD-1.3).</description>
+                <type>text</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>true</externally-managed-flag>
+            </attribute-definition>
+        </custom-attribute-definitions>
+    </type-extension>
+
+    <!-- ===== Custom Object: MSPPaymentMethod ===== -->
+    <custom-type type-id="MSPPaymentMethod">
+        <display-name xml:lang="x-default">MSP Payment Method</display-name>
+        <description xml:lang="x-default">Stores synchronized payment methods from MultiSafepay.</description>
+        <staging-mode>no-staging</staging-mode>
+        <storage-scope>site</storage-scope>
+        <key-definition attribute-id="gatewayId">
+            <type>string</type>
+            <min-length>1</min-length>
+        </key-definition>
+        <attribute-definitions>
+            <attribute-definition attribute-id="name">
+                <display-name xml:lang="x-default">Display Name</display-name>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="iconUrl">
+                <display-name xml:lang="x-default">Icon URL</display-name>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="enabled">
+                <display-name xml:lang="x-default">Enabled</display-name>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="requiresComponent">
+                <display-name xml:lang="x-default">Requires Payment Component</display-name>
+                <description xml:lang="x-default">If true, the MSP Payment Component will be loaded for inline form (e.g. credit cards).</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="sortOrder">
+                <display-name xml:lang="x-default">Sort Order</display-name>
+                <type>int</type>
+                <mandatory-flag>false</mandatory-flag>            </attribute-definition>
+            <attribute-definition attribute-id="countries">
+                <display-name xml:lang="x-default">Allowed Countries</display-name>
+                <description xml:lang="x-default">Comma-separated ISO 3166-1 alpha-2 country codes where this method is available (e.g. NL,DE,IT,BE).</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="currencies">
+                <display-name xml:lang="x-default">Allowed Currencies</display-name>
+                <description xml:lang="x-default">Comma-separated ISO 4217 currency codes accepted by this method (e.g. EUR,USD). Empty means no currency restriction.</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="minAmount">
+                <display-name xml:lang="x-default">Minimum Amount</display-name>
+                <description xml:lang="x-default">Minimum order total (major currency units) for which this method is available. 0 means no minimum.</description>
+                <type>double</type>
+                <mandatory-flag>false</mandatory-flag>            </attribute-definition>
+            <attribute-definition attribute-id="maxAmount">
+                <display-name xml:lang="x-default">Maximum Amount</display-name>
+                <description xml:lang="x-default">Maximum order total (major currency units) for which this method is available. 0 means no maximum.</description>
+                <type>double</type>
+                <mandatory-flag>false</mandatory-flag>            </attribute-definition>
+            <attribute-definition attribute-id="supportsCapture">
+                <display-name xml:lang="x-default">Supports Manual Capture</display-name>
+                <description xml:lang="x-default">If true, this method supports authorize-then-capture (manual capture). Instant methods (e.g. iDEAL) are false.</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+            </attribute-definition>
+        </attribute-definitions>
+        <group-definitions>
+            <attribute-group group-id="MSPPaymentMethod">
+                <display-name xml:lang="x-default">MSP Payment Method</display-name>
+                <attribute attribute-id="name"/>
+                <attribute attribute-id="iconUrl"/>
+                <attribute attribute-id="enabled"/>
+                <attribute attribute-id="requiresComponent"/>
+                <attribute attribute-id="sortOrder"/>
+                <attribute attribute-id="countries"/>
+                <attribute attribute-id="currencies"/>
+                <attribute attribute-id="minAmount"/>
+                <attribute attribute-id="maxAmount"/>
+                <attribute attribute-id="supportsCapture"/>
+            </attribute-group>
+        </group-definitions>
+    </custom-type>
+
+</metadata>

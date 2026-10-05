@@ -1,0 +1,30 @@
+{
+    "step-types": {
+        "script-module-step": [
+            {
+                "@type-id": "custom.MSP.NotifyShipments",
+                "@supports-parallel-execution": "false",
+                "@supports-site-context": "true",
+                "@supports-organization-context": "false",
+                "description": "REQ-2.1.6 — Notifies MultiSafepay of orders marked as Shipped so BNPL (Riverty/Klarna/Billink/in3) financial status is updated. Run per site, e.g. hourly.",
+                "module": "multisafepay/cartridge/scripts/jobs/notifyShipments.js",
+                "function": "run",
+                "transactional": "false",
+                "timeout-in-seconds": "900",
+                "parameters": {},
+                "status-codes": {
+                    "status": [
+                        {
+                            "@code": "ERROR",
+                            "description": "Used when the step failed with an error."
+                        },
+                        {
+                            "@code": "OK",
+                            "description": "Used when the step finished successfully."
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

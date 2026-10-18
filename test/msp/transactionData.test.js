@@ -82,15 +82,20 @@ function loadModel(prefs, coStore) {
             getCustomObject: function (type, key) {
                 var entry = coStore && coStore[key];
                 if (!entry) { return null; }
+                var custom = {};
+                // An attribute the metadata does not define throws on access.
+                Object.defineProperty(custom, 'supportsCapture', {
+                    get: function () {
+                        if (entry.hasAttribute === false) { throw new Error('Unknown dynamic property'); }
+                        return entry.supportsCapture;
+                    }
+                });
                 return {
-                    custom: { supportsCapture: entry.supportsCapture },
+                    custom: custom,
+                    // Reproduces the platform: describe() reports defined attributes
+                    // as undefined. The code under test must not depend on it.
                     describe: function () {
-                        return {
-                            getCustomAttributeDefinition: function (id) {
-                                if (id === 'supportsCapture' && entry.hasAttribute === false) { return null; }
-                                return { id: id };
-                            }
-                        };
+                        return { getCustomAttributeDefinition: function () { return null; } };
                     }
                 };
             }

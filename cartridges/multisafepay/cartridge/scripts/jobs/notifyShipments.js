@@ -23,18 +23,19 @@ var Logger = require('dw/system/Logger').getLogger('multisafepay', 'MSP');
 var multisafepayHelper = require('*/cartridge/scripts/helpers/multisafepayHelper');
 
 /**
- * Returns true when the object's type defines the given custom attribute
- * (avoids "Unknown dynamic property" when metadata is not imported). Never throws.
- * @param {dw.object.ExtensibleObject} extObj - object to inspect
- * @param {string} attrId - custom attribute id
- * @returns {boolean} whether the attribute is defined
+ * Reads the order's "already notified" flag. Never throws.
+ *
+ * The attribute is read directly: describe().getCustomAttributeDefinition() has
+ * reported defined attributes as undefined, which would make the job refuse every
+ * order. An attribute the metadata does not define throws on access.
+ * @param {dw.order.Order} order - the order
+ * @returns {Object} {available: boolean, notified: boolean}
  */
-function orderDefines(extObj, attrId) {
+function readNotifiedFlag(order) {
     try {
-        var def = extObj.describe();
-        return !!(def && def.getCustomAttributeDefinition(attrId));
+        return { available: true, notified: order.custom.Multisafepay_ShipmentNotified === true };
     } catch (e) {
-        return false;
+        return { available: false, notified: false };
     }
 }
 
@@ -88,15 +89,21 @@ function buildShipmentData(order) {
 }
 
 /**
- * Flags an order as already notified so the next run skips it.
+ * Flags an order as already notified so the next run skips it. Never throws.
  * @param {dw.order.Order} order - the notified order
- * @returns {void}
+ * @returns {boolean} whether the flag was saved
  */
 function markNotified(order) {
-    Transaction.wrap(function () {
-        // eslint-disable-next-line no-param-reassign
-        order.custom.Multisafepay_ShipmentNotified = true;
-    });
+    try {
+        Transaction.wrap(function () {
+            // eslint-disable-next-line no-param-reassign
+            order.custom.Multisafepay_ShipmentNotified = true;
+        });
+        return true;
+    } catch (e) {
+        Logger.error('[NotifyShipments] Order {0}: could not save Multisafepay_ShipmentNotified: {1}', order.orderNo, e.message);
+        return false;
+    }
 }
 
 /**
@@ -137,10 +144,10 @@ function run() {
             }
             mspOrders++;
 
-            // Skip if already notified (guarded — attribute may not be imported yet).
-            var attributeAvailable = orderDefines(order, 'Multisafepay_ShipmentNotified');
-            if (!attributeAvailable || order.custom.Multisafepay_ShipmentNotified === true) {
-                if (!attributeAvailable) {
+            // Skip if already notified (the attribute may not be imported yet).
+            var flag = readNotifiedFlag(order);
+            if (!flag.available || flag.notified) {
+                if (!flag.available) {
                     // Without the flag the job cannot remember what it already sent
                     // and would re-notify MSP on every run. Refuse and report it.
                     Logger.warn('[NotifyShipments] Order.Multisafepay_ShipmentNotified is not defined — import system-objecttype-extensions.xml. Order {0} skipped.', order.orderNo);
@@ -152,10 +159,14 @@ function run() {
 
             var result = multisafepayHelper.updateOrderShipped(clientKey, order.orderNo, buildShipmentData(order));
 
-            if (result.success) {
+            if (result.success && markNotified(order)) {
                 notified++;
-                markNotified(order);
                 Logger.info('[NotifyShipments] Order {0} shipment notified to MSP', order.orderNo);
+            } else if (result.success) {
+                // MultiSafepay has the update, but the order cannot remember it and
+                // would be sent again on every run. Fail loudly.
+                failed++;
+                lastError = 'order ' + order.orderNo + ' - notified, but Order.Multisafepay_ShipmentNotified could not be saved (metadata not imported?).';
             } else {
                 failed++;
                 // The status message is the one diagnostic that reaches Job

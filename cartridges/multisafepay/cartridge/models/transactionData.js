@@ -170,10 +170,9 @@ function gatewaySupportsManualCapture(gateway) {
         if (!co) {
             return false;
         }
-        var def = co.describe();
-        if (!def || !def.getCustomAttributeDefinition('supportsCapture')) {
-            return false;
-        }
+        // Read directly: describe().getCustomAttributeDefinition() has reported
+        // defined attributes as undefined. A missing attribute throws or reads as
+        // undefined; both mean "no manual capture".
         return co.custom.supportsCapture === true;
     } catch (e) {
         return false;

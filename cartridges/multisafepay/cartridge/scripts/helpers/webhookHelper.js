@@ -14,18 +14,23 @@ var currentSite = dwsystem.Site.getCurrent();
 var Logger = require('dw/system/Logger').getLogger('multisafepay', 'MSP');
 
 /**
- * Returns true when the object's type defines the given custom attribute.
- * Prevents "Unknown dynamic property" when metadata has not been imported yet.
- * Never throws.
- * @param {dw.object.ExtensibleObject} extObj - object to inspect
+ * Writes one custom attribute, tolerating an attribute the metadata does not define
+ * (writing an undefined attribute throws "Unknown dynamic property"), so a pending
+ * metadata import cannot break webhook processing. Never throws.
+ * describe().getCustomAttributeDefinition() is not used: it has reported attributes as
+ * undefined on objects that carry them, which silently emptied the values behind it.
+ * @param {dw.object.ExtensibleObject} extObj - object to write to
  * @param {string} attrId - custom attribute id
- * @returns {boolean} whether the attribute is defined
+ * @param {*} value - value to store
+ * @returns {boolean} whether the value was stored
  */
-function txnDefines(extObj, attrId) {
+function setCustom(extObj, attrId, value) {
   try {
-    var def = extObj.describe();
-    return !!(def && def.getCustomAttributeDefinition(attrId));
+    // eslint-disable-next-line no-param-reassign
+    extObj.custom[attrId] = value;
+    return true;
   } catch (e) {
+    Logger.warn('[Webhook] Custom attribute {0} not stored (metadata not imported?): {1}', attrId, e.message);
     return false;
   }
 }
@@ -207,29 +212,25 @@ function notify(notificationData) {
             // 'completed' while the financial status stays 'initialized' until the
             // payment is captured. Store it so the BM order detail can tell an
             // awaiting-capture payment from an already-captured/instant one.
-            // Only write when the metadata defines the attribute (checked via
-            // describe, never throws) so a pending metadata import cannot break
-            // webhook processing / order confirmation.
-            if (notificationData.financial_status && txnDefines(paymentInstrument.paymentTransaction, 'Multisafepay_FinancialStatus')) {
-              paymentInstrument.paymentTransaction.custom.Multisafepay_FinancialStatus = notificationData.financial_status;
+            if (notificationData.financial_status) {
+              setCustom(paymentInstrument.paymentTransaction, 'Multisafepay_FinancialStatus', notificationData.financial_status);
             }
             // The capture deadline. MSP releases the authorization if the
             // payment is not captured before it, so the merchant must see it in the
             // order detail. The field has moved across API shapes, so read every
-            // known location. Written only when the metadata defines the attribute.
+            // known location.
             var captureExpiry = notificationData.capture_expiry
               || (notificationData.payment_details && notificationData.payment_details.capture_expiry)
               || notificationData.capture_expiry_at;
-            if (captureExpiry && txnDefines(paymentInstrument.paymentTransaction, 'Multisafepay_CaptureExpiry')) {
-              paymentInstrument.paymentTransaction.custom.Multisafepay_CaptureExpiry = String(captureExpiry);
+            if (captureExpiry) {
+              setCustom(paymentInstrument.paymentTransaction, 'Multisafepay_CaptureExpiry', String(captureExpiry));
             }
             // Store the MSP payment_methods breakdown (coupons/gift cards
             // applied on the MSP hosted page + the payment method), so the order
             // detail can show the split even when SFCC has no GIFT_CERTIFICATE
             // instrument (the coupon was applied on the MSP side).
-            if (notificationData.payment_methods && notificationData.payment_methods.length
-                && txnDefines(paymentInstrument.paymentTransaction, 'Multisafepay_PaymentBreakdown')) {
-              paymentInstrument.paymentTransaction.custom.Multisafepay_PaymentBreakdown = JSON.stringify(notificationData.payment_methods);
+            if (notificationData.payment_methods && notificationData.payment_methods.length) {
+              setCustom(paymentInstrument.paymentTransaction, 'Multisafepay_PaymentBreakdown', JSON.stringify(notificationData.payment_methods));
             }
             if(!paymentInstrument.paymentTransaction.transactionID){
               paymentInstrument.paymentTransaction.setTransactionID(notificationData.transaction_id);

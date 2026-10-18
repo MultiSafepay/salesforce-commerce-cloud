@@ -232,7 +232,7 @@ Core of the MSP API integration. All HTTP calls use `dw/net/HTTPClient` with the
 | `captureOrder(apiToken, orderNumber, amount, currencyCode)` | `POST /orders/{orderNumber}/capture` with `amount` (cents; the order gross total when no amount is given) and `new_order_status: 'completed'`. |
 | `refundOrder(apiToken, amount, orderNumber, currencyCode, invoiceNo)` | `POST /orders/{orderNumber}/refunds` with `amount` (cents) and `currency`. `invoiceNo` is accepted but not sent. |
 | `getAllTransactions(apiToken)` | Aggregates `GET /transactions` for the dashboard: payment and refund counts (today and total) and, for the last 7 days, the daily payment and refund **amounts**. |
-| `getEnabledMSPMethods()` | Reads the `MSPPaymentMethod` Custom Objects with `enabled !== false`, sorted by `sortOrder`. The restriction/capture attributes are read only if the metadata defines `currencies`. |
+| `getEnabledMSPMethods()` | Reads the `MSPPaymentMethod` Custom Objects with `enabled !== false`, sorted by `sortOrder`. Each restriction/capture attribute is read on its own and falls back to empty when the metadata does not define it. |
 | `getApplicableMSPMethods(customer, countryCode, amount, currencyCode)` | Returns the methods to show at checkout (see below). |
 
 `getAllTransactions` uses an internal `fetchTransactionsPaginated` that requests pages with
@@ -276,7 +276,8 @@ A method is shown only if all of the following hold:
   `Multisafepay_CaptureExpiry` (`capture_expiry`, `payment_details.capture_expiry` or
   `capture_expiry_at`), `Multisafepay_PaymentBreakdown` (JSON of `payment_methods`), the
   `transactionID` (if not set yet) and `Multisafepay_AmountRefunded` (`amount_refunded / 100`, when
-  above zero). The three newer attributes are written only when the metadata defines them. If the
+  above zero). Each of the three newer attributes is written on its own and skipped, with a warning,
+  when the metadata does not define it. If the
   method actually used (`payment_details.type`, else `payment_method`) differs from the stored
   gateway, it overwrites `Multisafepay_Gateway` on both the payment instrument and the transaction.
   It then acts on `status`:
@@ -320,7 +321,8 @@ job itself is created and scheduled in Business Manager.
    and shipping-method display name (as carrier) when available, and sets
    `Multisafepay_ShipmentNotified = true` on success.
 4. If the `Order.Multisafepay_ShipmentNotified` attribute is not defined in the metadata, the order
-   is not notified and is counted as a failure.
+   is not notified and is counted as a failure. If MultiSafepay accepts the update but the flag
+   cannot be saved, the order is also counted as a failure, so it cannot be re-sent unnoticed.
 5. Returns `ERROR` (`NOTIFY_FAILED`) with the last error, including the order number, when any
    order failed; otherwise `OK` with the number of orders notified. The status message is shown in
    Job History.
@@ -370,7 +372,8 @@ Registered in `bm_extensions.xml`:
 4. Maps each entry with `mapApiPaymentMethod` and creates or updates the `MSPPaymentMethod` Custom
    Objects. New objects are created with `enabled = true` and the next `sortOrder`; existing
    objects keep their `enabled` and `sortOrder`. `currencies`, `minAmount`, `maxAmount` and
-   `supportsCapture` are written only when the metadata defines them.
+   `supportsCapture` are each written on their own and skipped when the metadata does not define
+   them; the core sync proceeds either way.
 5. Disables the Custom Objects of methods not returned and clears their `countries`.
 6. Generates the XML for the returned methods and triggers the import job.
 

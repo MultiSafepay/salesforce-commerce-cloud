@@ -10,19 +10,38 @@ var multisafepayHelper = require('*/cartridge/scripts/helpers/multisafepayHelper
 var Logger = require('dw/system/Logger').getLogger('multisafepay', 'MSP');
 
 /**
- * Returns true when the object's type actually defines the given custom attribute.
- * Used to skip writing the newer MSPPaymentMethod attributes when the metadata
- * (system-objecttype-extensions.xml) has not been imported yet — writing an
- * undefined dynamic property throws "Unknown dynamic property" and would abort
- * the whole Sync. Never throws.
- * @param {dw.object.ExtensibleObject} extObj - the object to inspect
- * @param {string} attrId - the custom attribute id
- * @returns {boolean} whether the attribute is defined on the type
+ * Reads one custom attribute, tolerating an attribute the metadata does not define.
+ * Never throws.
+ * describe().getCustomAttributeDefinition() is not used: it has reported attributes as
+ * undefined on objects that carry them, which silently emptied the values behind it.
+ * @param {dw.object.ExtensibleObject} extObj - object to read from
+ * @param {string} attrId - custom attribute id
+ * @param {*} fallback - value returned when the attribute is missing or empty
+ * @returns {*} the stored value, or `fallback`
  */
-function customObjectDefines(extObj, attrId) {
+function readCustom(extObj, attrId, fallback) {
   try {
-    var def = extObj.describe();
-    return !!(def && def.getCustomAttributeDefinition(attrId));
+    var value = extObj.custom[attrId];
+    return (value === undefined || value === null) ? fallback : value;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+/**
+ * Writes one custom attribute, tolerating an attribute the metadata does not define:
+ * writing an undefined attribute throws "Unknown dynamic property" and would abort
+ * the whole Sync. Never throws.
+ * @param {dw.object.ExtensibleObject} extObj - object to write to
+ * @param {string} attrId - custom attribute id
+ * @param {*} value - value to store
+ * @returns {boolean} whether the value was stored
+ */
+function setCustom(extObj, attrId, value) {
+  try {
+    // eslint-disable-next-line no-param-reassign
+    extObj.custom[attrId] = value;
+    return true;
   } catch (e) {
     return false;
   }
@@ -217,12 +236,8 @@ server.get('Start', csrfProtection.generateToken, function (_req, res, next) {
   var methods = [];
   try {
     var cos = CustomObjectMgr.getAllCustomObjects('MSPPaymentMethod');
-    var hasRestrictionAttrs = null;
     while (cos.hasNext()) {
       var co = cos.next();
-      if (hasRestrictionAttrs === null) {
-        hasRestrictionAttrs = customObjectDefines(co, 'currencies');
-      }
       methods.push({
         gatewayId: co.custom.gatewayId,
         name: co.custom.name,
@@ -233,10 +248,11 @@ server.get('Start', csrfProtection.generateToken, function (_req, res, next) {
         countries: co.custom.countries || '',
         // Surface the MSP amount/currency restrictions in the BM so the
         // merchant can see them (read defensively when metadata is imported).
-        currencies: hasRestrictionAttrs ? (co.custom.currencies || '') : '',
-        minAmount: hasRestrictionAttrs ? (co.custom.minAmount || 0) : 0,
-        maxAmount: hasRestrictionAttrs ? (co.custom.maxAmount || 0) : 0,
-        supportsCapture: hasRestrictionAttrs ? (co.custom.supportsCapture === true) : false
+        // String(): a custom string attribute is a Java String object.
+        currencies: String(readCustom(co, 'currencies', '')),
+        minAmount: readCustom(co, 'minAmount', 0) || 0,
+        maxAmount: readCustom(co, 'maxAmount', 0) || 0,
+        supportsCapture: readCustom(co, 'supportsCapture', false) === true
       });
     }
     cos.close();
@@ -417,7 +433,7 @@ server.post('SyncPaymentMethods', server.middleware.https, function (req, res, n
 
     var synced = [];
     var sortIndex = 0;
-    var hasRestrictionAttrs = null; // resolved lazily from the first CO's type definition
+    var restrictionAttrsWarned = false;
 
     Transaction.wrap(function () {
       // Create/update methods
@@ -438,20 +454,15 @@ server.post('SyncPaymentMethods', server.middleware.https, function (req, res, n
         co.custom.iconUrl = info.iconUrl;
         co.custom.requiresComponent = info.requiresComponent;
         co.custom.countries = countriesStr;
-        // New restriction/capture attributes. Only written when the
-        // metadata defines them — checked once from the first CO's type. Without
-        // the import these are simply skipped and the core sync still succeeds.
-        if (hasRestrictionAttrs === null) {
-          hasRestrictionAttrs = customObjectDefines(co, 'currencies');
-          if (!hasRestrictionAttrs) {
-            Logger.warn('[SyncPaymentMethods] MSPPaymentMethod metadata is missing the restriction/capture attributes (currencies, minAmount, maxAmount, supportsCapture). Import system-objecttype-extensions.xml to enable them. Core sync proceeds without them.');
-          }
-        }
-        if (hasRestrictionAttrs) {
-          co.custom.currencies = info.currencies || '';
-          co.custom.minAmount = info.minAmount || 0;
-          co.custom.maxAmount = info.maxAmount || 0;
-          co.custom.supportsCapture = info.supportsCapture === true;
+        // Restriction/capture attributes. Each is written on its own, so an
+        // un-imported attribute is skipped without aborting the core sync.
+        var restrictionsStored = setCustom(co, 'currencies', info.currencies || '');
+        restrictionsStored = setCustom(co, 'minAmount', info.minAmount || 0) && restrictionsStored;
+        restrictionsStored = setCustom(co, 'maxAmount', info.maxAmount || 0) && restrictionsStored;
+        restrictionsStored = setCustom(co, 'supportsCapture', info.supportsCapture === true) && restrictionsStored;
+        if (!restrictionsStored && !restrictionAttrsWarned) {
+          restrictionAttrsWarned = true;
+          Logger.warn('[SyncPaymentMethods] MSPPaymentMethod metadata is missing the restriction/capture attributes (currencies, minAmount, maxAmount, supportsCapture). Import metadata/site-import to enable them. Core sync proceeds without them.');
         }
 
         synced.push({

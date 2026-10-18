@@ -16,18 +16,27 @@ var STATUS_ERROR = 3;
  */
 function orderStub(opts) {
     var custom = {};
-    if (opts.notified !== undefined) { custom.Multisafepay_ShipmentNotified = opts.notified; }
+    var flag = opts.notified;
     var hasAttribute = opts.hasAttribute !== false;
+    // An attribute the metadata does not define throws on access. `writeFails`
+    // models an attribute that reads as empty but cannot be saved.
+    Object.defineProperty(custom, 'Multisafepay_ShipmentNotified', {
+        get: function () {
+            if (!hasAttribute) { throw new Error('Unknown dynamic property'); }
+            return flag;
+        },
+        set: function (value) {
+            if (!hasAttribute || opts.writeFails) { throw new Error('Unknown dynamic property'); }
+            flag = value;
+        }
+    });
     return {
         orderNo: opts.orderNo,
         custom: custom,
+        // Reproduces the platform: describe() reports defined attributes as
+        // undefined. The job must not depend on it.
         describe: function () {
-            return {
-                getCustomAttributeDefinition: function (id) {
-                    if (id === 'Multisafepay_ShipmentNotified' && !hasAttribute) { return null; }
-                    return { id: id };
-                }
-            };
+            return { getCustomAttributeDefinition: function () { return null; } };
         },
         getPaymentInstruments: function (method) {
             if (method === 'MultiSafepayPayment' && opts.isMsp !== false) { return [{}]; }
@@ -186,6 +195,17 @@ test.describe('notifyShipments - failures are visible in Job History', function 
         var status = ctx.job.run();
         assert.strictEqual(ctx.notifyCalls.length, 0);
         assert.strictEqual(status.code, STATUS_ERROR);
+        assert.ok(String(status.message).indexOf('metadata') > -1, status.message);
+    });
+
+    test.it('fails loudly when the notification is sent but the flag cannot be saved', function () {
+        var ctx = loadJob({
+            orders: [orderStub({ orderNo: '7', writeFails: true })]
+        });
+        var status = ctx.job.run();
+        assert.strictEqual(ctx.notifyCalls.length, 1);
+        assert.strictEqual(status.code, STATUS_ERROR);
+        assert.ok(String(status.message).indexOf('order 7') > -1, status.message);
         assert.ok(String(status.message).indexOf('metadata') > -1, status.message);
     });
 

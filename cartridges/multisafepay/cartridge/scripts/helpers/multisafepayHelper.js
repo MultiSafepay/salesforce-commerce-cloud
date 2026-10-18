@@ -568,19 +568,21 @@ function generateApiToken(apiKey) {
 }
 
 /**
- * Returns true when the object's type defines the given custom attribute.
- * Avoids "Unknown dynamic property" errors when the metadata has not been
- * imported yet. Never throws.
- * @param {dw.object.ExtensibleObject} extObj - object to inspect
+ * Reads one custom attribute, tolerating an attribute the metadata does not define,
+ * so a pending metadata import cannot break checkout rendering. Never throws.
+ * describe().getCustomAttributeDefinition() is not used: it has reported attributes as
+ * undefined on objects that carry them, which silently emptied the values behind it.
+ * @param {dw.object.ExtensibleObject} extObj - object to read from
  * @param {string} attrId - custom attribute id
- * @returns {boolean} whether the attribute is defined
+ * @param {*} fallback - value returned when the attribute is missing or empty
+ * @returns {*} the stored value, or `fallback`
  */
-function objectDefines(extObj, attrId) {
+function readCustom(extObj, attrId, fallback) {
     try {
-        var def = extObj.describe();
-        return !!(def && def.getCustomAttributeDefinition(attrId));
+        var value = extObj.custom[attrId];
+        return (value === undefined || value === null) ? fallback : value;
     } catch (e) {
-        return false;
+        return fallback;
     }
 }
 
@@ -671,12 +673,8 @@ function getEnabledMSPMethods() {
     // Whether the newer restriction/capture attributes exist in the metadata —
     // resolved once from the first CO so a pending metadata import cannot break
     // checkout rendering (reading an undefined attribute would otherwise throw).
-    var hasRestrictionAttrs = null;
     while (cos.hasNext()) {
         var co = cos.next();
-        if (hasRestrictionAttrs === null) {
-            hasRestrictionAttrs = objectDefines(co, 'currencies');
-        }
         if (co.custom.enabled !== false) {
             methods.push({
                 gatewayId: co.custom.gatewayId,
@@ -686,11 +684,12 @@ function getEnabledMSPMethods() {
                 // API flags captured at sync time (payment_components.has_fields &&
                 // is_enabled). No hardcoded gateway list.
                 requiresComponent: co.custom.requiresComponent === true,
-                supportsCapture: hasRestrictionAttrs ? co.custom.supportsCapture === true : false,
+                supportsCapture: readCustom(co, 'supportsCapture', false) === true,
                 countries: co.custom.countries || '',
-                currencies: hasRestrictionAttrs ? (co.custom.currencies || '') : '',
-                minAmount: hasRestrictionAttrs ? (co.custom.minAmount || 0) : 0,
-                maxAmount: hasRestrictionAttrs ? (co.custom.maxAmount || 0) : 0,
+                // String(): a custom string attribute is a Java String object.
+                currencies: String(readCustom(co, 'currencies', '')),
+                minAmount: readCustom(co, 'minAmount', 0) || 0,
+                maxAmount: readCustom(co, 'maxAmount', 0) || 0,
                 sortOrder: co.custom.sortOrder || 0
             });
         }

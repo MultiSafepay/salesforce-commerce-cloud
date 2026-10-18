@@ -65,8 +65,10 @@ function loadSyncRoute(opts) {
         var custom = { gatewayId: key };
         return {
             custom: custom,
+            // Reproduces the platform: describe() reports defined attributes as
+            // undefined. The code under test must not depend on it.
             describe: function () {
-                return { getCustomAttributeDefinition: function (id) { return { id: id }; } };
+                return { getCustomAttributeDefinition: function () { return null; } };
             }
         };
     }

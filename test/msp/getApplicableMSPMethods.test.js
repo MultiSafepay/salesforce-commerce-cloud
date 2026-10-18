@@ -27,12 +27,10 @@ function co(attrs) {
     }, attrs);
     return {
         custom: custom,
+        // Reproduces the platform: describe() reports defined attributes as
+        // undefined. The code under test must not depend on it.
         describe: function () {
-            return {
-                getCustomAttributeDefinition: function (id) {
-                    return Object.prototype.hasOwnProperty.call(custom, id) ? { id: id } : null;
-                }
-            };
+            return { getCustomAttributeDefinition: function () { return null; } };
         }
     };
 }

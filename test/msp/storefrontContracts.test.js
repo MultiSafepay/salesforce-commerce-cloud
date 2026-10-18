@@ -147,6 +147,27 @@ test.describe('BM order payment detail', function () {
             'expected the tolerant direct read');
     });
 
+    test.it('no cartridge code relies on describe().getCustomAttributeDefinition()', function () {
+        // It has reported defined attributes as undefined, silently emptying the
+        // values behind it. Read or write the attribute inside a try/catch instead.
+        var offenders = [];
+        ['cartridges/multisafepay', 'cartridges/bm_multisafepay'].forEach(function (dir) {
+            (function walk(rel) {
+                fs.readdirSync(path.join(ROOT, rel), { withFileTypes: true }).forEach(function (entry) {
+                    var child = rel + '/' + entry.name;
+                    if (entry.isDirectory()) { walk(child); return; }
+                    if (!/\.(js|isml)$/.test(entry.name)) { return; }
+                    read(child).split('\n').forEach(function (line, i) {
+                        var code = line.replace(/\/\/.*$/, '');
+                        if (/^\s*\*/.test(code)) { return; }
+                        if (code.indexOf('getCustomAttributeDefinition(') > -1) { offenders.push(child + ':' + (i + 1)); }
+                    });
+                });
+            }(dir));
+        });
+        assert.deepStrictEqual(offenders, []);
+    });
+
     test.it('never compares a raw custom attribute with strict equality', function () {
         // SFCC returns custom string attributes as Java String objects. `attr ===
         // 'completed'` is therefore false no matter what the text says, which is

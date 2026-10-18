@@ -107,7 +107,7 @@ function shippingItem(payload) {
     return payload.shopping_cart.items.filter(function (i) { return i.name === 'Shipping'; })[0];
 }
 
-test.describe('transactionData - shipping line item (REQ-2.1.6)', function () {
+test.describe('transactionData - shipping line item', function () {
     test.it('identifies the shipping cost line with the reserved id msp-shipping', function () {
         var TransactionData = loadModel({}, {});
         var payload = new TransactionData(orderStub(), 'en_NL', 'IDEAL', 84.69).transactionData;
@@ -129,7 +129,7 @@ test.describe('transactionData - shipping line item (REQ-2.1.6)', function () {
     });
 });
 
-test.describe('transactionData - manual capture (REQ-2.2.2)', function () {
+test.describe('transactionData - manual capture', function () {
     var capturable = { VISA: { supportsCapture: true } };
     var notCapturable = { IDEAL: { supportsCapture: false } };
 
@@ -140,7 +140,7 @@ test.describe('transactionData - manual capture (REQ-2.2.2)', function () {
     });
 
     test.it('does NOT request manual capture for a method that does not support it', function () {
-        // The 4th QA round showed "capture": "manual" being sent for IDEAL.
+        // "capture": "manual" used to be sent for IDEAL.
         var TransactionData = loadModel({ Multisafepay_ManualCapture: true }, notCapturable);
         var payload = new TransactionData(orderStub(), 'en_NL', 'IDEAL', 84.69).transactionData;
         assert.strictEqual(payload.capture, undefined);

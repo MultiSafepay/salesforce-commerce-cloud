@@ -268,7 +268,7 @@ server.get(
             return next();
         }
 
-        // FIND-2.4 / REQ-2.1.1(A) BNPL: verify the payment before showing the
+        // BNPL: verify the payment before showing the
         // confirmation. As a fallback for when the async webhook has not arrived
         // yet, query MSP directly and drive the same notify() logic:
         //  - 'completed'/'shipped' → order placed and PAID;
@@ -288,7 +288,7 @@ server.get(
                     transaction_id: mspOrder.data.transaction_id || order.orderNo,
                     payment_details: mspOrder.data.payment_details,
                     payment_method: mspOrder.data.payment_method,
-                    // REQ-2.2.2: forward the capture deadline so it is stored even
+                    // Forward the capture deadline so it is stored even
                     // when the confirmation beats the async webhook.
                     capture_expiry: mspOrder.data.capture_expiry,
                     payment_methods: mspOrder.data.payment_methods

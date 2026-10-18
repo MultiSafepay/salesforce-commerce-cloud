@@ -75,7 +75,7 @@
                                                     ${method.minAmount > 0 ? 'min ' + method.minAmount : ''}${method.minAmount > 0 && method.maxAmount > 0 ? ' / ' : ''}${method.maxAmount > 0 ? 'max ' + method.maxAmount : ''}
                                                 </span>
                                             </isif>
-                                            <!--- REQ-1.1.4: an empty country list means MultiSafepay reports
+                                            <!--- An empty country list means MultiSafepay reports
                                                   allowed_countries: [] for this method, i.e. no country restriction.
                                                   Say so explicitly: showing nothing read as missing data. --->
                                             <isif condition="${method.countries}">

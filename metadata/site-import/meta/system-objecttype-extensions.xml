@@ -64,7 +64,7 @@
         </group-definitions>
     </type-extension>
 
-    <!-- ===== Order: BNPL shipment notification tracking (REQ-2.1.6) ===== -->
+    <!-- ===== Order: BNPL shipment notification tracking ===== -->
     <type-extension type-id="Order">
         <custom-attribute-definitions>
             <attribute-definition attribute-id="Multisafepay_ShipmentNotified">
@@ -96,14 +96,14 @@
             </attribute-definition>
             <attribute-definition attribute-id="Multisafepay_CaptureExpiry">
                 <display-name xml:lang="x-default">Multisafepay Capture Expiry</display-name>
-                <description xml:lang="x-default">Deadline reported by MSP by which an authorized (manual capture) payment must be captured; after it the authorization is released. Shown in the order Payment tab (REQ-2.2.2).</description>
+                <description xml:lang="x-default">Deadline reported by MSP by which an authorized (manual capture) payment must be captured; after it the authorization is released. Shown in the order Payment tab.</description>
                 <type>string</type>
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>true</externally-managed-flag>
             </attribute-definition>
             <attribute-definition attribute-id="Multisafepay_PaymentBreakdown">
                 <display-name xml:lang="x-default">Multisafepay Payment Breakdown</display-name>
-                <description xml:lang="x-default">JSON array of the payment_methods reported by MSP (type + amount), used to display coupon/gift-card + payment-method breakdowns applied on the MSP hosted page (ADD-1.3).</description>
+                <description xml:lang="x-default">JSON array of the payment_methods reported by MSP (type + amount), used to display coupon/gift-card + payment-method breakdowns applied on the MSP hosted page.</description>
                 <type>text</type>
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>true</externally-managed-flag>

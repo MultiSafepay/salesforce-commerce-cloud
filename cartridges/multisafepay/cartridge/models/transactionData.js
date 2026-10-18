@@ -18,7 +18,7 @@ function getTaxTableSelector(taxRate) {
 
 /**
  * Splits an address into street and house number for the MSP API, ensuring the
- * house number is never duplicated in both `address1` and `house_number` (item 8).
+ * house number is never duplicated in both `address1` and `house_number`.
  *
  * Strategy:
  *  1. If address2 is a bare number/number+suffix (e.g. "42", "42B", "42-A"), the
@@ -51,7 +51,7 @@ function parseStreetAndHouseNumber(address1, address2) {
     }
 
     // 2) Number at the tail of address1: extract it AND remove it from the street
-    //    to avoid duplication (this was the reported bug).
+    //    to avoid duplication.
     if (address1) {
         var tailMatch = address1.match(/^(.*?)[\s,]+(\d+[\w\-]*)[\s,]*$/);
         if (tailMatch) {
@@ -135,7 +135,7 @@ function buildShoppingCartItems(order) {
                 description: 'Shipping costs',
                 unit_price: Math.round(shippingLI.getAdjustedNetPrice().getValue() * 100) / 100,
                 quantity: 1,
-                // REQ-2.1.6: MSP requires the shipping-cost line to be identified by
+                // MSP requires the shipping-cost line to be identified by
                 // the reserved merchant_item_id 'msp-shipping' so it is recognised as
                 // shipping (and not as a product) in the BNPL/shipment flows.
                 merchant_item_id: 'msp-shipping',
@@ -195,18 +195,18 @@ function transactionData(order, currentLocaleID, gateway, orderTotal) {
         shippingAddress = billingAddress;
     }
 
-    // FIND-2.1: Use unique reference — orderNo for guests, customerNo for registered
+    // Use unique reference — orderNo for guests, customerNo for registered
     var customerReference = order.getCustomerNo() ? order.getCustomerNo() : order.orderNo;
 
     // BNPL: split street/house number for methods that require it (e.g. Riverty).
-    // The house number is stripped from address1 so it is never sent twice (item 8).
+    // The house number is stripped from address1 so it is never sent twice.
     var billingParsed = parseStreetAndHouseNumber(billingAddress.address1, billingAddress.address2);
     var deliveryParsed = parseStreetAndHouseNumber(shippingAddress.address1, shippingAddress.address2);
 
     this.transactionData = {
         payment_options: {
             notification_method: 'POST',
-            notification_url: URLUtils.https('Multisafepay-Webhook').abs().toString(), // FIND-1.2
+            notification_url: URLUtils.https('Multisafepay-Webhook').abs().toString(),
             close_window: false,
             redirect_url: URLUtils.https('Multisafepay-Confirm', 'orderID', order.orderNo).abs().toString(),
             cancel_url: URLUtils.https('Multisafepay-Cancellation', 'orderID', order.orderNo).abs().toString()
@@ -225,7 +225,7 @@ function transactionData(order, currentLocaleID, gateway, orderTotal) {
             phone: billingAddress.phone,
             ip_address: order.remoteHost,
             email: order.customerEmail,
-            reference: customerReference // FIND-2.1
+            reference: customerReference
         },
         delivery: {
             first_name: shippingAddress.firstName,
@@ -234,15 +234,15 @@ function transactionData(order, currentLocaleID, gateway, orderTotal) {
             house_number: deliveryParsed.houseNumber || undefined,
             zip_code: shippingAddress.postalCode,
             city: shippingAddress.city,
-            state: shippingAddress.stateCode, // FIND-2.6
+            state: shippingAddress.stateCode,
             country: shippingAddress.countryCode.value,
             phone: shippingAddress.phone,
             email: order.customerEmail
         },
-        shopping_cart: { // FIND-2.4
+        shopping_cart: {
             items: buildShoppingCartItems(order)
         },
-        plugin: { // FIND-2.5
+        plugin: {
             shop: 'SalesforceCommerceCloud',
             shop_version: 'SFRA 6.3.0',
             plugin_version: '1.0.0',
@@ -253,16 +253,16 @@ function transactionData(order, currentLocaleID, gateway, orderTotal) {
             validate_cart: false,
             tax_tables: buildTaxTables(order)
         },
-        seconds_active: 3600, // FIND-2.3: removed days_active, 1 hour expiration
+        seconds_active: 3600, // 1 hour expiration; days_active is not used
         type: 'redirect',
         gateway: gateway,
         order_id: order.orderNo,
         currency: order.getCurrencyCode(),
-        amount: Math.round(orderTotal * 100), // FIND-2.2: safe integer rounding
+        amount: Math.round(orderTotal * 100), // safe integer rounding
         description: 'Order ' + order.orderNo
     };
 
-    // REQ-2.2.2: manual capture must only be requested for methods that actually
+    // Manual capture must only be requested for methods that actually
     // support it. Sending "capture": "manual" for a method without authorize-then-
     // capture support (iDEAL, bank transfer, most BNPL...) is rejected or silently
     // ignored by MSP and leaves the merchant with an order that can never be

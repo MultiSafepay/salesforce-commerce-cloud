@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * REQ-2.1.6 — Shipment status synchronization for (BNPL) MultiSafepay orders.
+ * Shipment status synchronization for (BNPL) MultiSafepay orders.
  *
  * Business Manager shipment changes do not raise a storefront hook, so this job
  * scans orders that have been marked as SHIPPED and notifies MultiSafepay, which
@@ -73,7 +73,7 @@ function buildShipmentData(order) {
             // carrier does not depend on it. An order marked shipped from
             // Business Manager normally has no tracking number, and reading the
             // carrier only inside this branch is why the PATCH body carried
-            // neither field and MSP rejected all seven orders on 2026-09-02.
+            // neither field and MSP rejected the notification.
             if (shipment.trackingNumber) {
                 data.tracktrace_code = String(shipment.trackingNumber);
                 if (methodName) { carrier = methodName; }

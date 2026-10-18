@@ -20,11 +20,11 @@ function loadHelper() {
     return sfcc.loadCartridgeModule(HELPER);
 }
 
-test.describe('mapApiPaymentMethod — MSP API contract (REQ-1.1.4 / REQ-2.2.1)', function () {
+test.describe('mapApiPaymentMethod — MSP API contract', function () {
     test.it('treats an EMPTY allowed_countries as "no restriction", not as a country list', function () {
         var helper = loadHelper();
-        // This is the exact shape MSP returns for Billink and Mastercard in the
-        // 4th QA round: no country restriction at all.
+        // This is the exact shape MSP returns for Billink and Mastercard:
+        // no country restriction at all.
         var result = helper.mapApiPaymentMethod({
             id: 'MASTERCARD',
             name: 'MasterCard',

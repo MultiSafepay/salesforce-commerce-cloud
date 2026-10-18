@@ -8,7 +8,7 @@ var Logger = require('dw/system/Logger').getLogger('multisafepay', 'MSP');
 // taken from the live /payment-methods response (manual_capture.supported and
 // apps.payment_components.has_fields && is_enabled respectively) and persisted on
 // the MSPPaymentMethod Custom Objects at sync time — there is no hardcoded gateway
-// list here (items 5 & 12).
+// list here.
 
 var service;
 var serviceCallback = {
@@ -95,9 +95,9 @@ function getApplicablePaymentMethods(DTO) {
     service = LocalServiceRegistry.createService(apiConfig.getApplicablePaymentMethods, serviceCallback);
     // Use the rich 'payment-methods' endpoint (returns name, icon_urls,
     // payment_components). The legacy 'gateways' endpoint only returns
-    // id + description, which left CO name/iconUrl undefined after eabb4c5.
+    // id + description, which would leave the custom object name/iconUrl undefined.
     var endpoint = getApiBaseUrl() + 'payment-methods';
-    // REQ-1.1.4 / REQ-1.3.1 / REQ-2.1.1: `country` and `currency` are OPTIONAL.
+    // `country` and `currency` are OPTIONAL.
     // When omitted, MSP returns the merchant's full catalogue together with each
     // method's own `allowed_countries` / `allowed_currencies`, which is the
     // authoritative restriction data. The sync deliberately omits them so no
@@ -119,7 +119,7 @@ function getApplicablePaymentMethods(DTO) {
         separator = '&';
     }
     // group_cards is driven by the Merchant Tools > Site Preferences >
-    // MultiSafepay Settings > "Group Card Methods" toggle (item 2).
+    // MultiSafepay Settings > "Group Card Methods" toggle.
     //  - true  (1): card schemes are bundled into a single "Credit Card" method
     //  - false (0): each card scheme (VISA, MASTERCARD, AMEX, MAESTRO) is a
     //               separate method with its own name/icon.
@@ -134,7 +134,7 @@ function getApplicablePaymentMethods(DTO) {
     endpoint += separator + 'group_cards=' + groupCards;
     separator = '&';
     // include_coupons=1 makes the endpoint also return available gift cards /
-    // coupon methods so they can be shown at checkout (item 14).
+    // coupon methods so they can be shown at checkout.
     endpoint += separator + 'include_coupons=1';
 
     var HTTPClient = require('dw/net/HTTPClient');
@@ -217,7 +217,7 @@ function Last7Days () {
         var d = new Date();
         d.setDate(d.getDate() - i);
         // Zero-padded ISO date (YYYY-MM-DD) so keys match the transaction
-        // dates derived from `created.split('T')[0]` (item 15). Without padding,
+        // dates derived from `created.split('T')[0]`. Without padding,
         // single-digit months/days (e.g. 2026-7-8) never matched the ISO keys
         // (2026-07-08), leaving the dashboard charts empty.
         result.push(d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()));
@@ -227,7 +227,7 @@ function Last7Days () {
 }
 
 /**
- * Fetches MSP transactions with defensive pagination (item 15 / QA point 4).
+ * Fetches MSP transactions with defensive pagination.
  *
  * The live account can process several transactions per minute, so a single page
  * would undercount the dashboard. This loops over pages accumulating rows.
@@ -417,7 +417,7 @@ function formatMspDate(date) {
  * this is what triggers the financial-status change (invoice/capture) on the MSP
  * side.
  *
- * REQ-2.1.6: MultiSafepay exposes order updates as **PATCH** /orders/{order_id}.
+ * MultiSafepay exposes order updates as **PATCH** /orders/{order_id}.
  * The previous implementation used POST. Verified against the live test API:
  *   PATCH /orders/<unknown-id>  -> 404 "Invalid transaction ID"  (verb accepted)
  *   POST  /orders/<unknown-id>  -> 405 "Method not allowed"      (verb rejected)
@@ -425,11 +425,11 @@ function formatMspDate(date) {
  * appeared to do nothing while still reporting a successful run.
  *
  * tracktrace_code, carrier and ship_date are **required**, not optional. Observed
- * on the QA sandbox on 2026-09-02: an order marked shipped in Business Manager
+ * against the MultiSafepay test API: an order marked shipped in Business Manager
  * without a tracking number produced a body of {"status":"shipped"} and MSP
  * answered
  *   HTTP 410: Required fields: tracktrace_code, carrier, ship_date
- * for all 7 orders in the run. Omitting them - which an earlier note recorded as
+ * Omitting them - which an earlier note recorded as
  * correct, never having tested it - is what failed. This function therefore
  * enforces the contract for every caller: the three keys are always present and
  * never blank, falling back to honest substitutes where the shipment carries
@@ -562,7 +562,7 @@ function generateApiToken(apiKey) {
 
     Logger.error('[GenerateApiToken] Error {0}: {1}', httpSvc.statusCode, httpSvc.errorText);
     // statusCode lets callers distinguish an invalid API key (401/403) from a
-    // transient error (network / 5xx) so only the former blocks checkout (item 7).
+    // transient error (network / 5xx) so only the former blocks checkout.
     return { success: false, statusCode: httpSvc.statusCode, invalidKey: httpSvc.statusCode === 401 || httpSvc.statusCode === 403 };
 }
 
@@ -593,7 +593,7 @@ function objectDefines(extObj, attrId) {
  *
  *  - countries   `allowed_countries: []` (or absent) means NO country
  *                restriction and maps to an EMPTY string. A non-empty list maps
- *                to its upper-cased CSV. (REQ-1.1.4 — the previous per-country
+ *                to its upper-cased CSV. (The previous per-country
  *                probe inferred this list instead of reading it, which pinned
  *                unrestricted methods to an arbitrary set of countries.)
  *  - currencies  `allowed_currencies` CSV, empty = no restriction.
@@ -604,7 +604,7 @@ function objectDefines(extObj, attrId) {
  *                `apps`, depending on the API shape).
  *  - capture     manual capture requires BOTH `supported` (the method can do it)
  *                AND `is_enabled` (the merchant's MSP account has it switched
- *                on) — REQ-2.2.1.
+ *                on).
  *
  * @param {Object} apiMethod - one entry of the MSP /payment-methods `data` array
  * @returns {Object|null} the Custom Object shape, or null when the entry has no id
@@ -681,7 +681,7 @@ function getEnabledMSPMethods() {
                 gatewayId: co.custom.gatewayId,
                 name: co.custom.name || co.custom.gatewayId,
                 iconUrl: co.custom.iconUrl || '',
-                // item 5: the inline component decision comes exclusively from the
+                // The inline component decision comes exclusively from the
                 // API flags captured at sync time (payment_components.has_fields &&
                 // is_enabled). No hardcoded gateway list.
                 requiresComponent: co.custom.requiresComponent === true,
@@ -704,12 +704,12 @@ function getEnabledMSPMethods() {
  * order:
  *   1. enabled MSPPaymentMethod Custom Objects only (disabled = hidden);
  *   2. MSP restriction data captured at sync time — country, currency and
- *      min/max amount (item 4);
+ *      min/max amount;
  *   3. the SFCC `Ordering > Payment Methods` gate on the matching
  *      `MSP_<gatewayId>` method: dropped if inactive, otherwise kept only if
  *      `isApplicable()` passes (customer group / customer type, country, currency,
  *      amount). A gateway with no imported SFCC method yet is kept so checkout is
- *      not broken during a partial rollout (items 1 & 3).
+ *      not broken during a partial rollout.
  *
  * @param {dw.customer.Customer} currentCustomer - the current customer (the ISML
  *        implicit `customer`, a dw.customer.Customer)
@@ -726,10 +726,10 @@ function getApplicableMSPMethods(currentCustomer, countryCode, amount, currencyC
     var upperCurrency = currencyCode ? String(currencyCode).toUpperCase() : '';
     var numericAmount = typeof amount === 'number' ? amount : parseFloat(amount) || 0;
 
-    // --- Restriction filtering from the synced MSP data (item 4) -------------
+    // --- Restriction filtering from the synced MSP data ----------------------
     // country, currency and min/max amount are enforced directly from the
     // Custom Object so that a method not meeting the criteria is never shown,
-    // regardless of the SFCC Ordering > Payment Methods import state (item 1).
+    // regardless of the SFCC Ordering > Payment Methods import state.
     coMethods = coMethods.filter(function (method) {
         // Country restriction
         if (method.countries) {
@@ -755,7 +755,7 @@ function getApplicableMSPMethods(currentCustomer, countryCode, amount, currencyC
         return true;
     });
 
-    // --- SFCC Ordering > Payment Methods gate (items 3 & 4) ------------------
+    // --- SFCC Ordering > Payment Methods gate --------------------------------
     // For each surviving gateway, consult its SFCC MSP_<gateway> payment method:
     //  - method not imported yet  → keep (partial-rollout safety)
     //  - method exists but inactive → drop (disabled in Ordering > Payment Methods)

@@ -123,7 +123,7 @@ function generatePaymentMethodsXML(methods) {
       xsw.writeEndElement();
       xsw.writeCharacters('\n');
 
-      // REQ-1.1.4: allowed countries.
+      // Allowed countries.
       // `method.countries` is empty when MSP reports allowed_countries: [] — i.e.
       // the method has NO country restriction. In that case the <countries>
       // element is still written, but EMPTY, so the import CLEARS any country
@@ -231,7 +231,7 @@ server.get('Start', csrfProtection.generateToken, function (_req, res, next) {
         requiresComponent: co.custom.requiresComponent === true,
         sortOrder: co.custom.sortOrder || 0,
         countries: co.custom.countries || '',
-        // REQ-1.2.2: surface the MSP amount/currency restrictions in the BM so the
+        // Surface the MSP amount/currency restrictions in the BM so the
         // merchant can see them (read defensively when metadata is imported).
         currencies: hasRestrictionAttrs ? (co.custom.currencies || '') : '',
         minAmount: hasRestrictionAttrs ? (co.custom.minAmount || 0) : 0,
@@ -363,12 +363,11 @@ server.post('SyncPaymentMethods', server.middleware.https, function (req, res, n
       return next();
     }
 
-    // REQ-1.1.4 / REQ-1.3.1 / REQ-2.1.1 --------------------------------------
     // ONE call to /payment-methods with no `country`/`currency` filter. MSP then
     // returns the merchant's whole catalogue, each entry carrying its own
     // `allowed_countries` / `allowed_currencies`.
     //
-    // Semantics (confirmed by MSP in the 4th QA round):
+    // Semantics (as documented by MultiSafepay):
     //   allowed_countries: []        -> available in EVERY country (no restriction)
     //   allowed_countries: ['NL',..] -> restricted to exactly those countries
     //
@@ -438,7 +437,7 @@ server.post('SyncPaymentMethods', server.middleware.https, function (req, res, n
         co.custom.iconUrl = info.iconUrl;
         co.custom.requiresComponent = info.requiresComponent;
         co.custom.countries = countriesStr;
-        // New restriction/capture attributes (item 4/12). Only written when the
+        // New restriction/capture attributes. Only written when the
         // metadata defines them — checked once from the first CO's type. Without
         // the import these are simply skipped and the core sync still succeeds.
         if (hasRestrictionAttrs === null) {
@@ -525,7 +524,7 @@ server.post('TogglePaymentMethod', server.middleware.https, function (req, res, 
 
     Logger.info('[TogglePaymentMethod] {0} set to {1}', gatewayId, enabled ? 'enabled' : 'disabled');
 
-    // item 3: reflect the enable/disable in Ordering > Payment Methods immediately
+    // Reflect the enable/disable in Ordering > Payment Methods immediately
     // by regenerating the XML and re-triggering the import job, so the two panels
     // cannot drift out of sync. Non-fatal if OCAPI import is not configured — the
     // Custom Object (single source of truth for checkout) is already updated.

@@ -69,8 +69,8 @@ function check(request) {
 
 /**
  * Ensures the MultiSafepay payment transaction on an order has a payment
- * processor assigned. Prevents the "The payment processor is unknown" state
- * (item 6). Must be called inside a transaction.
+ * processor assigned. Prevents the "The payment processor is unknown" state.
+ * Must be called inside a transaction.
  * @param {dw.order.Order} order - the order to fix up
  */
 function ensurePaymentProcessor(order) {
@@ -100,7 +100,7 @@ function ensurePaymentProcessor(order) {
  * @param {boolean} markPaid - when true set PAYMENT_STATUS_PAID (captured/settled);
  *        when false the order is placed but left NOTPAID (authorized/pending — used
  *        for BNPL "uncleared", where the amount is captured later at shipment).
- *        REQ-2.1.1(A): without placing on 'uncleared' a completed Riverty/BNPL
+ *        Without placing on 'uncleared' a completed Riverty/BNPL
  *        authorization would never become a successful SFCC order.
  */
 function confirmOrder(notificationData, markPaid) {
@@ -132,7 +132,7 @@ function confirmOrder(notificationData, markPaid) {
         if (settle) {
             order.setExportStatus(Order.EXPORT_STATUS_READY);
         }
-        // item 6 / REQ-1.4.3: defensively ensure the MSP payment transaction has a
+        // Defensively ensure the MSP payment transaction has a
         // payment processor assigned. A missing processor is what surfaces as
         // "The payment processor is unknown" and can leave the order stuck as
         // Failed even though MSP reports the payment completed.
@@ -175,7 +175,7 @@ function handleRefund(notificationData) {
         // Full refund completed → payment fully returned.
         order.setPaymentStatus(Order.PAYMENT_STATUS_NOTPAID);
       } else if (notificationData.status === 'partial_refunded') {
-        // item 11: a partial refund must NOT downgrade the payment status.
+        // A partial refund must NOT downgrade the payment status.
         // The order remains PAID; the refunded amount is represented separately
         // via the Multisafepay_AmountRefunded custom attribute (set in notify()).
         order.setPaymentStatus(Order.PAYMENT_STATUS_PAID);
@@ -193,7 +193,7 @@ function notify(notificationData) {
     if(order && order.getPaymentInstruments('MultiSafepayPayment').length > 0){
       var paymentInstrument = order.getPaymentInstruments('MultiSafepayPayment')[0];
       if(paymentInstrument && paymentInstrument.paymentTransaction){
-        // item 10: the method actually used on the MSP hosted page can differ from
+        // The method actually used on the MSP hosted page can differ from
         // the one initially selected (e.g. iDEAL selected → paid with Alipay+).
         // MSP reports it in payment_details.type (fallback to payment_method).
         var actualGateway = (notificationData.payment_details && notificationData.payment_details.type)
@@ -202,7 +202,7 @@ function notify(notificationData) {
         var gatewayChanged = actualGateway && actualGateway !== storedGateway;
         Transaction.wrap(function () {
             paymentInstrument.paymentTransaction.custom.Multisafepay_OrderStatus = notificationData.status;
-            // item 12: MSP reports the financial (transaction) status separately from
+            // MSP reports the financial (transaction) status separately from
             // the order status. For a manual-capture card the order status is
             // 'completed' while the financial status stays 'initialized' until the
             // payment is captured. Store it so the BM order detail can tell an
@@ -213,7 +213,7 @@ function notify(notificationData) {
             if (notificationData.financial_status && txnDefines(paymentInstrument.paymentTransaction, 'Multisafepay_FinancialStatus')) {
               paymentInstrument.paymentTransaction.custom.Multisafepay_FinancialStatus = notificationData.financial_status;
             }
-            // REQ-2.2.2: the capture deadline. MSP releases the authorization if the
+            // The capture deadline. MSP releases the authorization if the
             // payment is not captured before it, so the merchant must see it in the
             // order detail. The field has moved across API shapes, so read every
             // known location. Written only when the metadata defines the attribute.
@@ -223,7 +223,7 @@ function notify(notificationData) {
             if (captureExpiry && txnDefines(paymentInstrument.paymentTransaction, 'Multisafepay_CaptureExpiry')) {
               paymentInstrument.paymentTransaction.custom.Multisafepay_CaptureExpiry = String(captureExpiry);
             }
-            // ADD-1.3: store the MSP payment_methods breakdown (coupons/gift cards
+            // Store the MSP payment_methods breakdown (coupons/gift cards
             // applied on the MSP hosted page + the payment method), so the order
             // detail can show the split even when SFCC has no GIFT_CERTIFICATE
             // instrument (the coupon was applied on the MSP side).
@@ -237,7 +237,7 @@ function notify(notificationData) {
             if(notificationData.amount_refunded > 0){
               paymentInstrument.paymentTransaction.custom.Multisafepay_AmountRefunded = notificationData.amount_refunded / 100;
             }
-            // item 10: overwrite the stored gateway everywhere it is read from —
+            // Overwrite the stored gateway everywhere it is read from —
             // the payment instrument (Payment Info / order summary) AND the payment
             // transaction (BM logs) — so no reference to the originally selected
             // method survives once the real method is known.
@@ -289,7 +289,7 @@ function notify(notificationData) {
         cancelOrder(notificationData);
         break;
       case 'uncleared':
-        // REQ-2.1.1(A): 'uncleared' is the state of an authorized BNPL payment
+        // 'uncleared' is the state of an authorized BNPL payment
         // (Riverty/Klarna/Billink/in3) awaiting capture at shipment, as well as a
         // card payment awaiting manual capture. In all these cases the order is
         // valid and must be PLACED (not left as Failed/lost). It is placed as

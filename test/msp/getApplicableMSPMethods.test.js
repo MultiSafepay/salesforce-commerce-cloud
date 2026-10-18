@@ -84,7 +84,7 @@ function ids(result) {
     return result.map(function (m) { return m.gatewayId; });
 }
 
-test.describe('getApplicableMSPMethods - country filtering (REQ-1.1.4 / REQ-1.3.1 / REQ-2.1.1)', function () {
+test.describe('getApplicableMSPMethods - country filtering', function () {
     test.it('shows an unrestricted method (empty countries) in EVERY country', function () {
         var helper = loadHelper([{ gatewayId: 'MASTERCARD', countries: '' }]);
         ['NL', 'DE', 'PL', 'BR', 'JP'].forEach(function (country) {
@@ -97,7 +97,7 @@ test.describe('getApplicableMSPMethods - country filtering (REQ-1.1.4 / REQ-1.3.
     });
 
     test.it('regression: Mastercard is offered to a NL shopper', function () {
-        // The 4th QA round reported MASTERCARD missing at checkout with a NL
+        // MASTERCARD went missing at checkout with a NL
         // billing address, because the sync had pinned it to DE,IT,BE,FR,ES,AT.
         // With allowed_countries: [] correctly mapped to an empty string, it shows.
         var helper = loadHelper([
@@ -135,7 +135,7 @@ test.describe('getApplicableMSPMethods - other restrictions still apply', functi
         assert.deepStrictEqual(ids(helper.getApplicableMSPMethods({}, 'NL', 10, 'USD')), []);
     });
 
-    test.it('enforces the max amount (REQ-1.2.2: iDEAL above its cap disappears)', function () {
+    test.it('enforces the max amount (iDEAL above its cap disappears)', function () {
         var helper = loadHelper([{ gatewayId: 'IDEAL', maxAmount: 50000 }]);
         assert.deepStrictEqual(ids(helper.getApplicableMSPMethods({}, 'NL', 49999, 'EUR')), ['IDEAL']);
         assert.deepStrictEqual(ids(helper.getApplicableMSPMethods({}, 'NL', 51000, 'EUR')), []);

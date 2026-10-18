@@ -3,7 +3,7 @@
 /**
  * The mapper run against a REAL response captured from the MultiSafepay test API
  * (`GET /payment-methods?group_cards=0&include_coupons=1`, the exact URL the sync
- * now builds) for the sandbox account used in the fourth QA round.
+ * now builds) for a MultiSafepay test account.
  *
  * The fixture is what makes these assertions meaningful: they pin the connector
  * against the merchant's actual catalogue, not against a shape we invented.
@@ -46,10 +46,10 @@ function byId(mapped, id) {
     return found;
 }
 
-test.describe('live catalogue - the methods QA could not see (REQ-1.3.1 / REQ-2.1.1)', function () {
-    // Every method the fourth-round report listed as "The payment method doesn't
-    // appear in the checkout". The old per-country probe (country=NL&currency=EUR)
-    // returns 16 of 30 methods and drops exactly these fourteen.
+test.describe('live catalogue - the methods the per-country probe dropped', function () {
+    // Every method that did not appear in the checkout. The old per-country
+    // probe (country=NL&currency=EUR) returns 16 of 30 methods and drops
+    // exactly these fourteen.
     var REPORTED_MISSING = [
         'MASTERCARD', 'MISTERCASH', 'MYBANK', 'AMAZONBTN', 'KBC', 'BELFIUS',
         'DIRDEB', 'TRUSTLY', 'CBC', 'EPS', 'DOTPAY', 'MBWAY', 'MULTIBANCO', 'BIZUM'
@@ -89,21 +89,21 @@ test.describe('live catalogue - restrictions that are real', function () {
     });
 
     test.it('in3 B2B is hidden by its EUR 150 minimum, not by a country rule', function () {
-        // The fifteenth entry on the QA list. Their test basket was EUR 64, so the
-        // method was correctly withheld — this is not a defect.
+        // A EUR 64 basket is below that minimum, so the
+        // method is correctly withheld — this is not a defect.
         var in3b2b = byId(mapCatalogue(), 'IN3B2B');
         assert.strictEqual(in3b2b.countries, '');
         assert.strictEqual(in3b2b.minAmount, 150);
     });
 
     test.it('iDEAL keeps its EUR 50,000 cap', function () {
-        // Matches the REQ-1.2.2 check the QA passed with a EUR 51,000 basket.
+        // A EUR 51,000 basket must therefore not be offered iDEAL.
         var ideal = byId(mapCatalogue(), 'IDEAL');
         assert.strictEqual(ideal.maxAmount, 50000);
     });
 });
 
-test.describe('live catalogue - manual capture (REQ-2.2.1)', function () {
+test.describe('live catalogue - manual capture', function () {
     test.it('exactly the card schemes report manual capture', function () {
         var capturable = mapCatalogue()
             .filter(function (m) { return m.supportsCapture; })

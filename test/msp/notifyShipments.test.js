@@ -136,8 +136,7 @@ test.describe('notifyShipments - shipment data', function () {
         // An order marked shipped from Business Manager normally carries no
         // tracking number. Reading the carrier only inside the tracking-number
         // branch left the PATCH body with neither field, and MSP answered
-        // HTTP 410 "Required fields: tracktrace_code, carrier, ship_date"
-        // for all seven orders of the 2026-09-02 run.
+        // HTTP 410 "Required fields: tracktrace_code, carrier, ship_date".
         var ctx = loadJob({
             orders: [orderStub({ orderNo: '1', notified: false, carrier: 'PostNL' })]
         });
@@ -167,8 +166,8 @@ test.describe('notifyShipments - failures are visible in Job History', function 
         assert.strictEqual(status.code, STATUS_ERROR, 'a failed notification must not report OK');
         assert.ok(String(status.message).indexOf('Invalid API key') > -1, status.message);
         assert.ok(String(status.message).indexOf('00007601') > -1,
-            'the failing order number must reach Job History: on the QA sandbox the '
-            + 'multisafepay log category is disabled and this message is the only diagnostic');
+            'the failing order number must reach Job History: where the '
+            + 'multisafepay log category is disabled this message is the only diagnostic');
     });
 
     test.it('fails fast when no API key is configured', function () {

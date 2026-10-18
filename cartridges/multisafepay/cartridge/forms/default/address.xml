@@ -2,7 +2,7 @@
 <!--
     MultiSafepay override of the base address form.
 
-    Rationale (item 9): the base app_storefront_base address.xml restricts the
+    Rationale: the base app_storefront_base address.xml restricts the
     postal code to US ZIP or Canadian formats only, which rejects European
     alphanumeric postal codes (e.g. the Netherlands "1012 AB"). This override
     relaxes the postalCode validation to accept both numeric and alphanumeric
@@ -40,8 +40,8 @@
     <field formid="country" label="label.input.country" type="string" mandatory="true" binding="countryCode"
            missing-error="address.country.missing">
         <!--
-            REQ-1.1.4: MultiSafepay payment methods are filtered by the billing
-            country. With only US/NL/CN selectable the merchant (and QA) could not
+            MultiSafepay payment methods are filtered by the billing
+            country. With only US/NL/CN selectable the merchant could not
             reach the markets the MSP account actually serves, so country-restricted
             methods were untestable and unreachable for real shoppers.
             This list covers the EU/EEA + UK + CH markets MultiSafepay supports.

@@ -59,7 +59,7 @@ function loadHelper(opts) {
     return { helper: sfcc.loadCartridgeModule(HELPER), calls: calls };
 }
 
-test.describe('getApplicablePaymentMethods - endpoint (REQ-1.1.4)', function () {
+test.describe('getApplicablePaymentMethods - endpoint', function () {
     test.it('omits country and currency when the caller does not provide them', function () {
         var ctx = loadHelper();
         ctx.helper.getApplicablePaymentMethods({ apiToken: 'k' });
@@ -108,7 +108,7 @@ test.describe('getApplicablePaymentMethods - endpoint (REQ-1.1.4)', function () 
     });
 });
 
-test.describe('updateOrderShipped - BNPL shipment notification (REQ-2.1.6)', function () {
+test.describe('updateOrderShipped - BNPL shipment notification', function () {
     test.it('uses PATCH on the order resource', function () {
         var ctx = loadHelper();
         ctx.helper.updateOrderShipped('key', '00007601', {});
@@ -125,7 +125,7 @@ test.describe('updateOrderShipped - BNPL shipment notification (REQ-2.1.6)', fun
     });
 
     test.it('always sends the three fields MSP requires, never blank', function () {
-        // Observed on the QA sandbox, 2026-09-02: a body of {"status":"shipped"}
+        // Observed against the MultiSafepay test API: a body of {"status":"shipped"}
         // is answered with HTTP 410 "Required fields: tracktrace_code, carrier,
         // ship_date". An earlier version omitted them when empty, on the strength
         // of a note that had never been tested against the API.

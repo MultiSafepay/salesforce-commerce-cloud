@@ -402,6 +402,17 @@ function getOrderStatus(apiToken, orderNumber) {
 }
 
 /**
+ * Formats a date as the "YYYY-MM-DD HH:mm:ss" string MSP expects for ship_date.
+ * @param {Date} date - the date to format
+ * @returns {string} formatted date
+ */
+function formatMspDate(date) {
+    var Calendar = require('dw/util/Calendar');
+    var StringUtils = require('dw/util/StringUtils');
+    return StringUtils.formatCalendar(new Calendar(date), 'yyyy-MM-dd HH:mm:ss');
+}
+
+/**
  * Marks an MSP order as shipped. For BNPL methods (Riverty/Klarna/Billink/in3)
  * this is what triggers the financial-status change (invoice/capture) on the MSP
  * side.
@@ -413,23 +424,38 @@ function getOrderStatus(apiToken, orderNumber) {
  * so the old call could never take effect, which is why the scheduled job
  * appeared to do nothing while still reporting a successful run.
  *
- * Optional fields (tracktrace_code, carrier, ship_date) are omitted when empty:
- * MSP rejects empty strings for them.
+ * tracktrace_code, carrier and ship_date are **required**, not optional. Observed
+ * on the QA sandbox on 2026-09-02: an order marked shipped in Business Manager
+ * without a tracking number produced a body of {"status":"shipped"} and MSP
+ * answered
+ *   HTTP 410: Required fields: tracktrace_code, carrier, ship_date
+ * for all 7 orders in the run. Omitting them - which an earlier note recorded as
+ * correct, never having tested it - is what failed. This function therefore
+ * enforces the contract for every caller: the three keys are always present and
+ * never blank, falling back to honest substitutes where the shipment carries
+ * none.
  *
  * @param {string} apiToken - MSP API key
  * @param {string} orderNumber - the SFCC order number (= MSP order_id)
- * @param {Object} shipmentData - optional {tracktrace_code, carrier, ship_date}
+ * @param {Object} shipmentData - {tracktrace_code, carrier, ship_date}; blanks are defaulted
  * @returns {Object} result with success flag and data
  */
 function updateOrderShipped(apiToken, orderNumber, shipmentData) {
     var HTTPClient = require('dw/net/HTTPClient');
     var endpoint = getApiBaseUrl() + 'orders/' + encodeURIComponent(orderNumber);
 
-    var body = { status: 'shipped' };
     var data = shipmentData || {};
-    if (data.tracktrace_code) { body.tracktrace_code = data.tracktrace_code; }
-    if (data.carrier) { body.carrier = data.carrier; }
-    if (data.ship_date) { body.ship_date = data.ship_date; }
+    // String(x || '') at the point of read: these arrive from Java-backed
+    // shipment fields, where a falsy test on the object itself is not reliable.
+    var body = {
+        status: 'shipped',
+        // When the shipment carries no tracking number, MSP still requires the
+        // field. The order number is the reference the shopper and the BNPL
+        // provider already share, so it is preferred to a fabricated code.
+        tracktrace_code: String(data.tracktrace_code || '') || String(orderNumber),
+        carrier: String(data.carrier || '') || 'Unknown',
+        ship_date: String(data.ship_date || '') || formatMspDate(new Date())
+    };
     var payload = JSON.stringify(body);
 
     var svc = new HTTPClient();

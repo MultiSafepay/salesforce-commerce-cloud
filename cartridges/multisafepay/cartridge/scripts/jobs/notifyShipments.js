@@ -48,27 +48,39 @@ function formatShipDate(date) {
 }
 
 /**
- * Collects the tracking information available on the order's shipments, if any.
- * MSP accepts the shipment without it, but BNPL providers surface it to the
- * shopper when present.
+ * Collects the shipment information MSP needs alongside status "shipped".
+ *
+ * MSP requires tracktrace_code, carrier and ship_date (HTTP 410 otherwise), so
+ * whatever cannot be read here is defaulted by updateOrderShipped rather than
+ * dropped. This function's job is to supply the real values when they exist.
+ *
  * @param {dw.order.Order} order - the shipped order
- * @returns {Object} {tracktrace_code, carrier, ship_date} with empty values omitted
+ * @returns {Object} {tracktrace_code, carrier, ship_date}, real values only
  */
 function buildShipmentData(order) {
-    var data = {};
+    var data = { ship_date: formatShipDate(new Date()) };
     try {
         var shipments = order.getShipments();
+        var carrier = '';
         for (var i = 0; i < shipments.length; i++) {
             var shipment = shipments[i];
+            var methodName = (shipment.shippingMethod && shipment.shippingMethod.displayName)
+                ? String(shipment.shippingMethod.displayName)
+                : '';
+            if (!carrier) { carrier = methodName; }
+
+            // The tracking number decides which shipment is reported, but the
+            // carrier does not depend on it. An order marked shipped from
+            // Business Manager normally has no tracking number, and reading the
+            // carrier only inside this branch is why the PATCH body carried
+            // neither field and MSP rejected all seven orders on 2026-09-02.
             if (shipment.trackingNumber) {
-                data.tracktrace_code = shipment.trackingNumber;
-                if (shipment.shippingMethod && shipment.shippingMethod.displayName) {
-                    data.carrier = shipment.shippingMethod.displayName;
-                }
+                data.tracktrace_code = String(shipment.trackingNumber);
+                if (methodName) { carrier = methodName; }
                 break;
             }
         }
-        data.ship_date = formatShipDate(new Date());
+        if (carrier) { data.carrier = carrier; }
     } catch (e) {
         Logger.warn('[NotifyShipments] Could not read tracking data for {0}: {1}', order.orderNo, e.message);
     }
@@ -146,7 +158,10 @@ function run() {
                 Logger.info('[NotifyShipments] Order {0} shipment notified to MSP', order.orderNo);
             } else {
                 failed++;
-                lastError = String(result.data);
+                // The status message is the one diagnostic that reaches Job
+                // History whether or not the multisafepay log category is
+                // enabled, so it carries the order number as well as the error.
+                lastError = 'order ' + order.orderNo + ' - ' + String(result.data);
                 Logger.error('[NotifyShipments] Order {0} shipment notification failed: {1}', order.orderNo, result.data);
             }
         }

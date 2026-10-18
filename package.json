@@ -7,8 +7,9 @@
     "node": ">=4.0"
   },
   "scripts": {
-    "test": "sgmf-scripts --test test/unit/**/*.js",
+    "test": "node --test test/msp/*.test.js",
     "test:msp": "node --test test/msp/*.test.js",
+    "test:sfra": "sgmf-scripts --test test/unit/**/*.js",
     "cover": "sgmf-scripts --cover 'test/unit'",
     "test:integration": "sgmf-scripts --integration 'test/integration/**/*.js'",
     "test:acceptance:custom": "npx codeceptjs run --plugins retryFailedStep --profile",

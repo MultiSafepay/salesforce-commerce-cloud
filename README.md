@@ -16,7 +16,7 @@
   <img alt="SFRA 6.3.0" src="https://img.shields.io/badge/SFRA-6.3.0-00A1E0">
   <img alt="Salesforce B2C Commerce" src="https://img.shields.io/badge/Salesforce-B2C%20Commerce-00A1E0">
   <img alt="MultiSafepay API v1" src="https://img.shields.io/badge/MultiSafepay-API%20v1-00ABEE">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-npm%20run%20test%3Amsp-004A71">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-npm%20test-004A71">
 </p>
 
 ---
@@ -138,7 +138,7 @@ has not worked.
 ## Testing
 
 ```
-npm run test:msp
+npm test
 ```
 
 The MultiSafepay suite runs on Node's built-in test runner with no extra dependencies, in
@@ -147,15 +147,18 @@ the MultiSafepay API, sync, checkout applicability, the order payload, the HTTP 
 payloads sent to MultiSafepay, the shipment job, and contract tests on the storefront and
 Business Manager templates.
 
-> `npm test` runs the SFRA base suite on mocha. That suite does not start on current Node
-> versions and is not used to check MultiSafepay code.
+The same suite runs in CI on every push and pull request
+([`.github/workflows/test.yml`](.github/workflows/test.yml)), on Node 22 and 24.
+
+> The original SFRA unit suite is still available as `npm run test:sfra`. It does not
+> cover MultiSafepay code.
 
 ---
 
 ## Scope and known limitations
 
-- **Not included:** recurring payments and POS / omnichannel (SmartPOS, C-TAP).
-  These are open scope items, not defects.
+- **Not yet included:** recurring payments and POS / omnichannel (SmartPOS, C-TAP).
+  Both are planned for a later release.
 - The payment-method list is built when the billing step loads. Changing the billing
   country inside the form takes effect when the step is submitted.
 
@@ -168,6 +171,5 @@ Business Manager templates.
 | [Platform User Guide](docs/platform%20user%20guide.md) | Merchants and operators: setup, sync, capture, refunds, the BNPL job, troubleshooting |
 | [Technical Documentation](docs/technical%20documentation.md) | Developers: payment flow, components, metadata, API reference |
 | [Test Checklist](docs/test-checklist.md) | End-to-end validation scenarios |
-| [Handover, September 2026](docs/handover-2026-09.md) | The full history of the integration and the platform traps behind it |
 
 <p align="center"><sub>Built on Salesforce Storefront Reference Architecture 6.3.0.</sub></p>

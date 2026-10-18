@@ -14,7 +14,7 @@
 - [Before you commit](#before-you-commit)
 - [Commit messages](#commit-messages)
 - [Deploying a change](#deploying-a-change)
-- [Traps already paid for](#traps-already-paid-for)
+- [Platform behaviours to know](#platform-behaviours-to-know)
 - [Credentials](#credentials)
 - [Back to README](./README.md)
 
@@ -73,16 +73,13 @@ Everything about how a MultiSafepay `/payment-methods` response is interpreted l
 ## Before you commit
 
 ```
-npm run test:msp
+npm test
 ```
 
-This is the gate. It runs in under a second and must be green.
+This is the gate. It runs in under a second, needs no installed dependencies, and must
+be green. CI runs it on every push and pull request.
 
-- `npm test` runs the SFRA base suite. That suite does not start on current Node
-  versions and says nothing about MultiSafepay code.
-- The husky hooks are broken for the same reasons (`pre-commit` lints the SFRA base,
-  `pre-push` runs `npm test`). Commit and push with `--no-verify` **after** running
-  `test:msp` yourself.
+- `npm run test:sfra` runs the original SFRA unit suite. It does not cover MultiSafepay code.
 - When you fix a behaviour, add the test that would have caught it. Tests live in
   `test/msp/`. The `dw/*` modules are stubbed in `test/msp/helpers/sfccModules.js`.
 
@@ -96,10 +93,11 @@ changed. The reason is usually not visible in the code, and it is the part the n
 person will need.
 
 ```
-Fix MSP-NotifyShipments: send the fields MSP requires for status shipped
+Send tracking code, carrier and ship date when notifying a shipment
 
-MSP-NotifyShipments failed on the QA sandbox, 7 of 7 orders, with
-HTTP 410: Required fields: tracktrace_code, carrier, ship_date …
+MultiSafepay rejects a "shipped" update without tracktrace_code, carrier
+and ship_date (HTTP 410). Orders marked shipped from Business Manager
+usually have no tracking number, so the job sent neither field …
 ```
 
 If the reason behind a line of code is not obvious from the code itself, also put it in
@@ -124,10 +122,9 @@ Without step 3 a correct fix looks as though it has not worked.
 
 ---
 
-## Traps already paid for
+## Platform behaviours to know
 
-Each of these cost at least one QA round. The full story is in the
-[handover](docs/handover-2026-09.md).
+These are easy to get wrong and hard to notice when you do.
 
 - **Custom string attributes are Java `String` objects.**
   `order.custom.Foo === 'completed'` is always false, whatever the value. Normalise
@@ -143,8 +140,8 @@ Each of these cost at least one QA round. The full story is in the
 - **Manual capture applies only from the moment it is enabled.** Turning the setting on
   later does not make an order that was already placed capturable.
 - **The `multisafepay` log category may be disabled on an instance.** In that case every
-  `Logger.getLogger('multisafepay', …)` line is discarded. When a diagnostic has to
-  survive, render it into the page as an HTML comment.
+  `Logger.getLogger('multisafepay', …)` line is discarded. Enable it under
+  *Administration → Operations → Custom Log Settings* before relying on the logs.
 
 ---
 

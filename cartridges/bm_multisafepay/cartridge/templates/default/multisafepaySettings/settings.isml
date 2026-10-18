@@ -42,15 +42,15 @@
                         <p class="text-muted small">Enable or disable individual payment methods. Use the Sync &amp; Import button to fetch the latest methods from your MSP account and import them into Salesforce (including country availability).</p>
                         <div id="importMessage" class="alert alert-info small" style="display:none;"></div>
                         <details class="small text-muted mb-3">
-                            <summary>OCAPI setup (one-time, for Import button)</summary>
+                            <summary>OCAPI setup (one-time, for the import step of Sync &amp; Import)</summary>
                             <ol class="mt-2">
                                 <li>In Account Manager, create an API Client (or use existing) with OCAPI Data permissions</li>
                                 <li>In BM (Administration &rarr; Site Development &rarr; Open Commerce API Settings &rarr; Data API &rarr; Global), add:
-                                    <pre class="mt-1" style="font-size:11px;">{"_v":"24.5","clients":[{"client_id":"YOUR_CLIENT_ID","resources":[{"resource_id":"/sites/*/payment_methods/*","methods":["put"],"read_attributes":"(**)", "write_attributes":"(**)" }]}]}</pre>
+                                    <pre class="mt-1" style="font-size:11px;">{"_v":"24.5","clients":[{"client_id":"YOUR_CLIENT_ID","resources":[{"resource_id":"/jobs/*/executions","methods":["post"],"read_attributes":"(**)","write_attributes":"(**)"}]}]}</pre>
                                 </li>
                                 <li>In BM (Merchant Tools &rarr; Site Preferences &rarr; Custom Preferences &rarr; Multisafepay), set <em>OCAPI Client ID</em> and <em>OCAPI Client Secret</em></li>
                             </ol>
-                            <p>Once configured, clicking <strong>Import in Salesforce</strong> will create Payment Methods in SFCC via OCAPI.</p>
+                            <p>Once configured, <strong>Sync &amp; Import</strong> also starts the <code>MSP-ImportPaymentMethods</code> job through OCAPI, which imports the synced methods into Ordering &rarr; Payment Methods. The job must exist on the instance.</p>
                         </details>
                         <div id="paymentMethodsList">
                             <isif condition="${pdict.paymentMethods && pdict.paymentMethods.length > 0}">
@@ -95,7 +95,7 @@
                                     </div>
                                 </isloop>
                             <iselse/>
-                                <p class="text-muted">No payment methods synced yet. Click "Sync from MultiSafepay" to load available methods.</p>
+                                <p class="text-muted">No payment methods synced yet. Click "Sync &amp; Import" to load available methods.</p>
                             </isif>
                         </div>
                     </div>

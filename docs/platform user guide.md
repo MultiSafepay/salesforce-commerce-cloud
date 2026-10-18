@@ -161,8 +161,7 @@ configuration. The **"OCAPI setup"** panel on the settings page summarizes it:
      {"resource_id":"/jobs/*/executions","methods":["post"],"read_attributes":"(**)","write_attributes":"(**)"}
    ]}]}
    ```
-   The panel on the settings page lists a `/sites/*/payment_methods/*` resource; the
-   connector does not call that resource.
+   The same snippet is shown in the *OCAPI setup* panel on the settings page.
 3. In BM: **Merchant Tools → Site Preferences → Custom Preferences → Multisafepay Account
    Settings**, set **OCAPI Client ID** and **OCAPI Client Secret**.
 

@@ -5,6 +5,17 @@
         <url>https://testapi.multisafepay.com/v1/json/auth/api_token</url>
     </service-credential>
 
+    <!-- Base URL of the MultiSafepay API. The connector builds each request URL from the
+         selected environment (test or live), so this value is informational. -->
+    <service-credential id="Multisafepay.API.Credentials">
+        <url>https://testapi.multisafepay.com/v1/json/</url>
+    </service-credential>
+
+    <service-profile id="Multisafepay.API.Profile">
+        <timeout-millis>10000</timeout-millis>
+        <rate-limit-enabled>false</rate-limit-enabled>
+    </service-profile>
+
     <service-profile id="Multisafepay.GenerateApiToken.Profile">
         <timeout-millis>5000</timeout-millis>
         <rate-limit-enabled>false</rate-limit-enabled>
@@ -17,6 +28,51 @@
         <comm-log-enabled>false</comm-log-enabled>
         <credential-id>Multisafepay.GenerateApiToken.Credentials</credential-id>
         <profile-id>Multisafepay.GenerateApiToken.Profile</profile-id>
+    </service>
+
+    <service service-id="Multisafepay.GetPaymentMethods">
+        <service-type>HTTP</service-type>
+        <enabled>true</enabled>
+        <log-prefix>MSP-PaymentMethods</log-prefix>
+        <comm-log-enabled>false</comm-log-enabled>
+        <credential-id>Multisafepay.API.Credentials</credential-id>
+        <profile-id>Multisafepay.API.Profile</profile-id>
+    </service>
+
+    <service service-id="Multisafepay.CreateOrder">
+        <service-type>HTTP</service-type>
+        <enabled>true</enabled>
+        <log-prefix>MSP-Orders</log-prefix>
+        <comm-log-enabled>false</comm-log-enabled>
+        <credential-id>Multisafepay.API.Credentials</credential-id>
+        <profile-id>Multisafepay.API.Profile</profile-id>
+    </service>
+
+    <service service-id="Multisafepay.ListTransactions">
+        <service-type>HTTP</service-type>
+        <enabled>true</enabled>
+        <log-prefix>MSP-Transactions</log-prefix>
+        <comm-log-enabled>false</comm-log-enabled>
+        <credential-id>Multisafepay.API.Credentials</credential-id>
+        <profile-id>Multisafepay.API.Profile</profile-id>
+    </service>
+
+    <service service-id="Multisafepay.RefundOrder">
+        <service-type>HTTP</service-type>
+        <enabled>true</enabled>
+        <log-prefix>MSP-Refunds</log-prefix>
+        <comm-log-enabled>false</comm-log-enabled>
+        <credential-id>Multisafepay.API.Credentials</credential-id>
+        <profile-id>Multisafepay.API.Profile</profile-id>
+    </service>
+
+    <service service-id="Multisafepay.CaptureOrder">
+        <service-type>HTTP</service-type>
+        <enabled>true</enabled>
+        <log-prefix>MSP-Capture</log-prefix>
+        <comm-log-enabled>false</comm-log-enabled>
+        <credential-id>Multisafepay.API.Credentials</credential-id>
+        <profile-id>Multisafepay.API.Profile</profile-id>
     </service>
 
 </services>

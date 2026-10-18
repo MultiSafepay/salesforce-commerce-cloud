@@ -536,10 +536,11 @@ are in `scss/checkout_msp.scss` and `scss/multisafepay.scss`.
 1. `npm install`
 2. Create `dw.json` in the root with `hostname`, `username`, `password` (WebDAV access key),
    `code-version`.
-3. `npm run build` (compiles JS, fonts, SCSS).
-4. `npm run uploadCartridge` uploads the SFRA base cartridges; upload `multisafepay` and
-   `bm_multisafepay` separately (`npx sgmf-scripts --uploadCartridge <name>`), or use
-   `npm run watch`.
+3. `npm run build` compiles the client JS and SCSS of the `multisafepay` cartridge
+   (`packageName` in `package.json`) into its `static` folder. It does not compile the SFRA
+   base cartridges, which must already be built and deployed on the instance.
+4. Upload `multisafepay` and `bm_multisafepay` with `npx sgmf-scripts --uploadCartridge <name>`,
+   or use `npm run watch`. An upload replaces the whole cartridge on the instance.
 
 ### Deploy
 1. Import `metadata/site-import` (Site Import & Export).

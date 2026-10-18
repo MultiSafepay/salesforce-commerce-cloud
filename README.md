@@ -105,14 +105,16 @@ Key files:
 
 1. `npm install`, then create a `dw.json` in the project root with `hostname`, `username`,
    `password` (a WebDAV access key) and `code-version`. The file is gitignored.
-2. Build and upload. `npm run uploadCartridge` covers the SFRA base only, so the
-   MultiSafepay cartridges are uploaded separately:
+2. Build the connector's storefront assets and upload the two MultiSafepay cartridges:
    ```
    npm run build
-   npm run uploadCartridge
    npx sgmf-scripts --uploadCartridge multisafepay
    npx sgmf-scripts --uploadCartridge bm_multisafepay
    ```
+   `npm run build` compiles the client code of `multisafepay` only. The SFRA base
+   cartridges (`app_storefront_base`, `bm_app_storefront_base`, `modules`) must already be
+   built and deployed on the instance, as on any SFRA site. An upload replaces the whole
+   cartridge on the instance.
 3. Add `multisafepay` and `bm_multisafepay` to the cartridge paths, ahead of the base
    cartridges, as shown in [Architecture](#architecture).
 4. Import [`metadata/site-import`](metadata/site-import) as a ZIP under

@@ -1,106 +1,154 @@
-# Table of contents
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/multisafepay-logo-dark.png">
+    <img src="docs/assets/multisafepay-logo.png" alt="MultiSafepay" width="300">
+  </picture>
+</p>
 
-- [Conventions for branch names and commit messages ](#conventions-for-branch-names-and-commit-messages)
-- [Submitting your first pull request ](#submitting-your-first-pull-request)
-- [Submitting a pull request ](#submitting-a-pull-request)
-- [What to expect](#what-to-expect)
-- [Community contributors](#community-contributors)
-- [Contributor License Agreement (CLA)](#contributor-license-agreement) 
-- [Commit signing](#commit-signing)
+# Contributing
+
+## Contents
+
+- [Authors](#authors)
+- [Where changes go](#where-changes-go)
+- [Before you commit](#before-you-commit)
+- [Commit messages](#commit-messages)
+- [Deploying a change](#deploying-a-change)
+- [Traps already paid for](#traps-already-paid-for)
+- [Credentials](#credentials)
 - [Back to README](./README.md)
 
-# Contributing to SFRA
+---
 
-To contribute to the SFRA base cartridge, follow the guidelines below. This helps us address your pull request in a more timely manner. 
+## Authors
 
-## Conventions for branch names and commit messages
+<p align="center">
+  <a href="https://www.bip-group.it"><img src="docs/assets/bip-logo.png" alt="BIP" width="110"></a>
+</p>
 
-### Branch names
+<p align="center">
+  The MultiSafepay connector for Salesforce B2C Commerce was designed and built at
+  <a href="https://www.bip-group.it"><b>BIP</b></a> by
+</p>
 
-To name a branch, use the following pattern: `yourusername-description` 
+<table align="center">
+  <tr>
+    <td align="center">
+      <a href="https://github.com/gbrossa97">
+        <img src="https://github.com/gbrossa97.png?size=160" width="80" alt="Giorgia Brossa"><br>
+        <b>Giorgia Brossa</b></a><br>
+      <sub>@gbrossa97</sub>
+    </td>
+    <td align="center">
+      <a href="https://github.com/Silverhand96">
+        <img src="https://github.com/Silverhand96.png?size=160" width="80" alt="Mattia Lusian"><br>
+        <b>Mattia Lusian</b></a><br>
+      <sub>@Silverhand96</sub>
+    </td>
+  </tr>
+</table>
 
-In this pattern, `description` is dash-delimited.
+The Storefront Reference Architecture it builds on (`app_storefront_base`,
+`bm_app_storefront_base`, `modules`) is © Salesforce, under the terms in
+[license.txt](license.txt).
 
-For example: jdoe-unify-shipping-isml
+---
 
-### Commit messages
+## Where changes go
 
-To create a commit message, use the following pattern: `action-term: short-description`
+| Change | Cartridge |
+|---|---|
+| Checkout, payment hooks, webhook, order payload, shipment job | `cartridges/multisafepay` |
+| Settings page, Sync & Import, dashboard, order detail | `cartridges/bm_multisafepay` |
+| Site preferences, custom attributes, custom objects, services | `metadata/site-import` |
 
-In this pattern, `action-term` is one of the following: 
+**Never edit `app_storefront_base`.** To change SFRA behaviour, override the file in
+`multisafepay`. The cartridge path loads it first.
 
-* Bug
-* Doc
-* Chore
-* Update
-* Breaking
-* New
+Everything about how a MultiSafepay `/payment-methods` response is interpreted lives in
+`multisafepayHelper.mapApiPaymentMethod`. Change it there and nowhere else.
 
-After `action-term,` add a colon, and then write a short description. You can optionally include a GUS ticket number in parentheses.
+---
 
-For example:  "Breaking: Unify the single- and multi-ship shipping isml templates (W-999999)."
+## Before you commit
 
-## Submitting your first pull request
-If this is your first pull request, follow these steps:
+```
+npm run test:msp
+```
 
-  1. Create a fork of the SFRA repository
+This is the gate. It runs in under a second and must be green.
 
-  2. Download the forked repository
+- `npm test` runs the SFRA base suite. That suite does not start on current Node
+  versions and says nothing about MultiSafepay code.
+- The husky hooks are broken for the same reasons (`pre-commit` lints the SFRA base,
+  `pre-push` runs `npm test`). Commit and push with `--no-verify` **after** running
+  `test:msp` yourself.
+- When you fix a behaviour, add the test that would have caught it. Tests live in
+  `test/msp/`. The `dw/*` modules are stubbed in `test/msp/helpers/sfccModules.js`.
 
-  3. Checkout the integration branch
+---
 
-  4. Apply your code fix
+## Commit messages
 
-  5. Create a pull request against the integration branch
+A short imperative subject line, then a body that explains **why**. Write down what was
+observed, what caused it and why this fix and not another. The diff already shows *what*
+changed. The reason is usually not visible in the code, and it is the part the next
+person will need.
 
-## Submitting a pull request
+```
+Fix MSP-NotifyShipments: send the fields MSP requires for status shipped
 
-  1. Create a branch off the integration branch.
-       * To reduce merge conflicts, rebase your branch before submitting your pull request.
-       * If applicable, reference the issue number in the comments of your pull request.
+MSP-NotifyShipments failed on the QA sandbox, 7 of 7 orders, with
+HTTP 410: Required fields: tracktrace_code, carrier, ship_date …
+```
 
-  2. In your pull request, include:
-       * A brief description of the problem and your solution
-       * (optional) Screen shots
-       * (optional) Error logs
-       * (optional) Steps to reproduce 
+If the reason behind a line of code is not obvious from the code itself, also put it in
+a comment next to that line.
 
-  3. Grant SFRA team members access to your fork so we can run an automated test on your pull request prior to merging it into our integration branch.
-       * From within your forked repository, find the 'Settings' link (see the site navigation on left of the page).
-       * Under the settings menu, click 'User and group access'.
-       * Add the new user to the input field under the heading 'Users' and give the new user write access.
+---
 
-  4. Indicate if there is any data that needs to be included with your code submission. 
+## Deploying a change
 
-  5. Your code should pass the automation process.
-       * Lint your code:  
-         `npm run lint`    
-       * Run and pass the unit test:  
-         `npm run test`
-       * Run and pass the unit/intergration test:  
-         `npm run test:integration`
+```
+npx sgmf-scripts --uploadCartridge multisafepay
+npx sgmf-scripts --uploadCartridge bm_multisafepay
+```
 
-## What to expect
+`npm run uploadCartridge` uploads the SFRA base only. After every deploy:
 
-After you submit your pull request, we'll look it over and consider it for merging.
+1. Import `metadata/site-import`.
+2. Re-run **Sync & Import** on the Multisafepay settings page.
+3. Confirm in *Job History* that **`MSP-ImportPaymentMethods`** finished OK.
 
-As long as your submission has met the above guidelines, we should merge it in a timely manner.
+Without step 3 a correct fix looks as though it has not worked.
 
-Our sprints run for about two weeks; in that period of time, we typically review all pull requests, give feedback, and merge the request (depending on our current sprint priorities).
+---
 
-## Community contributors 
+## Traps already paid for
 
-To speed up the process of reviewing and merging your pull request, grant the following team members access to your fork:
+Each of these cost at least one QA round. The full story is in the
+[handover](docs/handover-2026-09.md).
 
-  * SFRA team 
+- **Custom string attributes are Java `String` objects.**
+  `order.custom.Foo === 'completed'` is always false, whatever the value. Normalise
+  with `String(x || '')` where you read the attribute, and compare that copy.
+- **`describe().getCustomAttributeDefinition()` can report existing attributes as
+  undefined.** Read the attribute directly inside a `try/catch` instead.
+- **`allowed_countries: []` means available everywhere.** Never infer a country list,
+  and never pass `country` or `currency` to `/payment-methods`, because that
+  pre-filters the catalogue.
+- **MultiSafepay order updates use `PATCH`.** `POST` returns 405, and a job that does not
+  check the response still reports OK.
+- **A green job is not proof.** Check the effect on the MultiSafepay side.
+- **Manual capture applies only from the moment it is enabled.** Turning the setting on
+  later does not make an order that was already placed capturable.
+- **The `multisafepay` log category may be disabled on an instance.** In that case every
+  `Logger.getLogger('multisafepay', …)` line is discarded. When a diagnostic has to
+  survive, render it into the page as an HTML comment.
 
-## Contributor License Agreement
+---
 
-All external contributors must sign our Contributor License Agreement (CLA).  
+## Credentials
 
-## Commit signing
-
-All contributors must set up [commit signing](https://help.github.com/en/github/authenticating-to-github/signing-commits).
-
-
-
+API keys, OCAPI secrets and WebDAV access keys never go into the repository, a commit or
+a message. `dw.json` is gitignored. Keep it that way.

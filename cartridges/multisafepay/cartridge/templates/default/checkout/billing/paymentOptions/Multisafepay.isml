@@ -128,4 +128,7 @@
 
 <script type="text/javascript">
     window.componentTokenURL = "${URLUtils.https('Multisafepay-GetComponentToken')}";
+    // Read by checkout/giftCard.js for the gift certificate Apply and Remove actions.
+    window.validateGift = "${URLUtils.https('Multisafepay-ValidateGift')}";
+    window.removeGiftCard = "${URLUtils.https('Multisafepay-RemoveGiftCard')}";
 </script>

@@ -339,7 +339,7 @@ the override replaces the whole base form. `forms/default/billing.xml` adds the 
 `config/apiConfig.js` maps logical names to service IDs: `Multisafepay.GetPaymentMethods`,
 `.CreateOrder`, `.ListTransactions`, `.RefundOrder`, `.CaptureOrder`, `.GenerateApiToken`. The
 helpers create these services through `LocalServiceRegistry` but perform the HTTP calls with
-`dw/net/HTTPClient`. Only `Multisafepay.GenerateApiToken` is defined in
+`dw/net/HTTPClient`, building each URL from the selected environment. All six are defined in
 `metadata/site-import/services.xml`.
 
 ---
@@ -429,11 +429,11 @@ always false.
 
 | Preference | Type | Description |
 |---|---|---|
-| `Multisafepay_Environment` | — | `test` or `live`. Listed in the group; not defined in `system-objecttype-extensions.xml`. |
+| `Multisafepay_Environment` | string | `test` (default) or `live`. |
 | `Multisafepay_TestApiKey` | string | API key used in the test environment. |
 | `Multisafepay_LiveApiKey` | string | API key used in the live environment. |
-| `Multisafepay_ClientKey` | — | Legacy single key, used as fallback. Listed in the group; not defined in this file. |
-| `Multisafepay_OMSOption` | — | Salesforce OMS flag set from the settings page; not read by the connector code. Listed in the group; not defined in this file. |
+| `Multisafepay_ClientKey` | string | Legacy single key, used only when the key for the selected environment is empty. |
+| `Multisafepay_OMSOption` | boolean | Salesforce OMS flag set from the settings page; not read by the connector code. |
 | `Multisafepay_ManualCapture` | boolean | Request manual capture for methods that support it. |
 | `Multisafepay_GroupCards` | boolean (default `false`) | `true`: card schemes grouped into one method (`group_cards=1`); `false`: one method per scheme (`group_cards=0`). |
 | `Multisafepay_OCAPI_ClientId` | string | Account Manager API client ID used to trigger the import job. Empty disables auto-import. |
@@ -464,18 +464,13 @@ Defined in `system-objecttype-extensions.xml`:
 | `PaymentTransaction` | `Multisafepay_FinancialStatus` | string | MSP financial status from the notification (e.g. `initialized` while awaiting capture). |
 | `PaymentTransaction` | `Multisafepay_CaptureExpiry` | string | Deadline by which an authorized payment must be captured. |
 | `PaymentTransaction` | `Multisafepay_PaymentBreakdown` | text | JSON array of the `payment_methods` reported by MSP (coupons / gift cards and payment method). |
+| `PaymentTransaction` | `Multisafepay_Gateway` | string | Gateway, overwritten with the method actually used on the payment page. |
+| `PaymentTransaction` | `Multisafepay_OrderStatus` | string | Last MSP order status. |
+| `PaymentTransaction` | `Multisafepay_AmountRefunded` | double | Refunded amount (major units). |
+| `PaymentTransaction` | `Multisafepay_log` | text | JSON response of `POST /orders`. |
+| `OrderPaymentInstrument` | `Multisafepay_Gateway` | string | Selected gateway, overwritten with the method actually used. |
 
-Also used by the code but not defined in this file (they must exist in the instance metadata):
-
-| Object | Attribute | Description |
-|---|---|---|
-| `PaymentInstrument` | `Multisafepay_Gateway` | Selected gateway, overwritten with the method actually used. |
-| `PaymentTransaction` | `Multisafepay_Gateway` | Gateway, as above. |
-| `PaymentTransaction` | `Multisafepay_OrderStatus` | Last MSP order status. |
-| `PaymentTransaction` | `Multisafepay_log` | JSON response of `POST /orders`. |
-| `PaymentTransaction` | `Multisafepay_AmountRefunded` | Refunded amount (major units). |
-
-The code checks that the newer attributes exist before writing them, so deploying the code before
+The newer attributes are read and written inside a `try/catch`, so deploying the code before
 importing the metadata does not break checkout, the sync or the webhook; the related features stay
 inactive until the import.
 

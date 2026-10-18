@@ -106,11 +106,11 @@ Processed 4 total elements
 The instance import completed successfully.
 ```
 
-**3 type-extensions** (SitePreferences, Order, PaymentTransaction) and
-**1 custom-type** (MSPPaymentMethod) is the whole of the connector's metadata. A
-run that reports fewer elements imported an older archive. `services.xml` (the
-`Multisafepay.GenerateApiToken` service) is imported by the same archive and appears
-in the log as a separate section.
+**4 type-extensions** (SitePreferences, Order, PaymentTransaction,
+OrderPaymentInstrument) and **1 custom-type** (MSPPaymentMethod) is the whole of the
+connector's metadata. A run that reports fewer elements imported an older archive.
+`services.xml` (the six `Multisafepay.*` services) is imported by the same archive and
+appears in the log as a separate section.
 
 You can confirm the result in the UI too: **Administration → Site Development →
 Custom Object Types** must list **MSPPaymentMethod**.

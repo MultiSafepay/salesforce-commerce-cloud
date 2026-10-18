@@ -4,8 +4,6 @@ cartridges/multisafepay/cartridge/static/default/js/
 cartridges/multisafepay/cartridge/static/default/fonts/
 cartridges/app_storefront_base/*
 
-.eva01/
-.github/
 
 coverage/
 npm-debug.log
@@ -27,5 +25,3 @@ test/appium/webdriver/config.json
 test/acceptance/report
 test/integration/config.json
 
-# Nami: local MultiSafepay API keys. Never commit these.
-.nami/config.json

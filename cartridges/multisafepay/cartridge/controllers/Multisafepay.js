@@ -399,7 +399,9 @@ server.post('Webhook', server.middleware.https, function (req, res, next) {
     }
     var Logger = require('dw/system/Logger');
     var notificationResult = webhookHelper.notify(order);
-    Logger.info('Notification Result: ' + JSON.stringify(order));
+    // The notification body carries customer data: debug level only. The order id and
+    // status are already logged at info level by webhookHelper.
+    Logger.debug('Notification Result: ' + JSON.stringify(order));
     if (notificationResult.success) {
         res.render('/notify');
     } else {

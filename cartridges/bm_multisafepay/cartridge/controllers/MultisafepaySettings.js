@@ -311,7 +311,8 @@ server.post('CaptureOrder', server.middleware.https, function (req, res, next) {
 
   Logger.info('[CaptureOrder] Starting capture for order {0}, amount={1}, currency={2}', orderNumber, amount, currencyCode);
   var captureResult = multisafepayHelper.captureOrder(clientKey, orderNumber, amount, currencyCode);
-  Logger.info('[CaptureOrder] Result: success={0}, data={1}', captureResult.success, JSON.stringify(captureResult.data));
+  Logger.info('[CaptureOrder] Result: success={0}', captureResult.success);
+  Logger.debug('[CaptureOrder] Response: {0}', JSON.stringify(captureResult.data));
 
   var capturedAt = '';
 

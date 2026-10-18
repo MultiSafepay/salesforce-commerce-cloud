@@ -522,7 +522,9 @@ are in `scss/checkout_msp.scss` and `scss/multisafepay.scss`.
   the root logger.
 - The `MSP` category must be enabled in Business Manager (**Administration → Operations → Custom
   Log Settings**) at the required level for its messages to be recorded. At `INFO` the connector
-  logs request URLs and payloads, including the `POST /orders` body with customer data.
+  logs request URLs, order numbers, statuses and results. Payloads that carry customer data (the
+  `POST /orders` body, the webhook notification body, the capture response) are logged at `DEBUG`
+  only; enable `DEBUG` for diagnosis on a test instance, not in production.
 - The `custom.MSP.NotifyShipments` job reports failures in its Job History status message,
   independently of log settings.
 - The order Payment tab renders the capture decision (gateway, statuses, preference and

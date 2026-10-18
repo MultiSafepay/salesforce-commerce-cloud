@@ -174,7 +174,8 @@ function createOrder(apiToken, transactionData) {
 
     var requestBody = JSON.stringify(transactionData.transactionData, null, 2);
     Logger.info('[CreateOrder] POST {0}', endpoint);
-    Logger.info('[CreateOrder] Request payload:\n{0}', requestBody);
+    // The payload carries the shopper's name, address, email and IP: debug level only.
+    Logger.debug('[CreateOrder] Request payload:\n{0}', requestBody);
     httpSvc.open( "POST", endpoint, false, null, null);
     httpSvc.setRequestHeader('Content-Type', 'application/json')
     httpSvc.send(requestBody);

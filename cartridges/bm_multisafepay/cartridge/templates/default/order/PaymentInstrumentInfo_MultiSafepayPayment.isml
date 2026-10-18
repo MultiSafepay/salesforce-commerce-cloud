@@ -194,7 +194,7 @@
 			<input type="hidden" name="Order_Number" id="order_number" value="${pdict.Order.currentOrderNo}">
 			<input type="hidden" name="Currency_Code" id="currency_code" value="${pdict.Order.getCurrencyCode()}">
 			<input type="hidden" name="Invoice_No" id="invoice_no" value="${pdict.Order.getInvoiceNo()}">
-			<input class="form-check-input" type="text" name="Refund_Amount" id="amount" placeholder="Amount to refund (leave empty for full refund)" value="">
+			<input class="form-check-input" type="text" name="Refund_Amount" id="amount" placeholder="Amount to refund" value="">
 			<button href="${URLUtils.url('Multisafepay-RefundOrder','orderNumber', pdict.Order.currentOrderNo)}" class="btn btn-primary btn-block btn-order-refund" id="order-refund"> REFUND PAYMENT </button>
 			<isif condition="${mspShowCapture}">
 				<button class="btn btn-success btn-block btn-order-capture" id="order-capture"> CAPTURE FULL PAYMENT </button>

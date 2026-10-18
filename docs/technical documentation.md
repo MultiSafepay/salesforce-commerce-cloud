@@ -621,8 +621,8 @@ number.
 - Enabling Manual Capture affects orders created afterwards; the `capture: 'manual'` instruction is
   sent when the order is created.
 - MSP capture is always for the full amount.
-- The refund amount field's placeholder suggests leaving it empty for a full refund; with an empty
-  field the connector sends `amount: 0`.
+- A refund always needs an explicit amount; the order-detail box does not send a refund with an
+  empty or non-positive amount field. A comma is accepted as the decimal separator.
 - Dashboard pagination of `GET /transactions` uses `limit`/`offset`; if the endpoint ignores them,
   de-duplication stops after the first page.
 - The OCAPI import requires an Account Manager API client with access to the Data API job

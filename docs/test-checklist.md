@@ -317,10 +317,9 @@ button is clicked.
       the box shows *Amount Refunded: <amount> <currency>*.
 - [ ] **9.2** Refund the remaining amount → the status becomes `refunded` and Payment
       Status **Not Paid**. *Amount Refunded* shows the total refunded.
-- [ ] **9.3** On another paid order, leave the amount **empty**, as the field's
-      placeholder suggests (*Amount to refund (leave empty for full refund)*), and click
-      **REFUND PAYMENT** → a full refund is made, as the placeholder promises. Record
-      the MultiSafepay response if it is not.
+- [ ] **9.3** Leave the amount **empty** (then enter `0`) and click **REFUND PAYMENT** →
+      the alert *Enter the amount to refund.* appears and no refund is requested. Enter
+      an amount with a comma (e.g. `1,50`) → the refund is made for 1.50.
 - [ ] **9.4** Try to refund more than the remaining amount → the alert *Refund failed:
       <MultiSafepay message>* appears, and nothing changes on the order.
 - [ ] **9.5** Check the MultiSafepay dashboard for 9.1 and 9.2 → the refunds there match

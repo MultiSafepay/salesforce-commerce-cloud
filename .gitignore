@@ -22,6 +22,4 @@ test/appium/webdriver/config.json
 .sfdx/
 *.iml
 .idea
-test/acceptance/report
-test/integration/config.json
 

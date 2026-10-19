@@ -30,7 +30,7 @@ integration (hereinafter **MSP**). The integration provides:
 | Server-side runtime | B2C Commerce script API (`dw.*`) |
 | Client-side | jQuery, Bootstrap 4, MultiSafepay Payment Component SDK (v2) |
 | Build | `sgmf-scripts`, Webpack, SCSS |
-| Testing | Node.js built-in test runner (connector suite); Mocha + Chai and CodeceptJS (SFRA base suites) |
+| Testing | Node.js built-in test runner (connector suite) |
 | CI | GitHub Actions |
 | MSP API | REST JSON v1 (`/v1/json/`) |
 
@@ -558,14 +558,10 @@ are in `scss/checkout_msp.scss` and `scss/multisafepay.scss`.
 |---|---|
 | `npm test` | Connector test suite: `node --test test/msp/*.test.js`. |
 | `npm run test:msp` | Alias of `npm test`. |
-| `npm run test:sfra` | SFRA base unit tests (Mocha via `sgmf-scripts`, `test/unit`). |
 | `npm run compile:js` / `compile:scss` | Compiles client JS / CSS with `--openssl-legacy-provider` (`compileUnix:*` and `compilev16:*` variants exist). |
 | `npm run build` | Compiles JS + fonts + SCSS. |
 | `npm run watch` | Watch + automatic upload. |
 | `npm run lint` | Lints JS + CSS. |
-| `npm run cover` | SFRA coverage (`test/unit`). |
-| `npm run test:integration` | SFRA integration tests (requires `dw.json`). |
-| `npm run test:acceptance:*` | CodeceptJS acceptance tests (smoke/desktop/mobile/…). |
 
 ### Testing
 The connector suite in `test/msp/` runs on Node's built-in test runner and needs no installed

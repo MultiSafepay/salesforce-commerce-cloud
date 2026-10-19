@@ -79,7 +79,6 @@ npm test
 This is the gate. It runs in under a second, needs no installed dependencies, and must
 be green. CI runs it on every push and pull request.
 
-- `npm run test:sfra` runs the original SFRA unit suite. It does not cover MultiSafepay code.
 - When you fix a behaviour, add the test that would have caught it. Tests live in
   `test/msp/`. The `dw/*` modules are stubbed in `test/msp/helpers/sfccModules.js`.
 

@@ -152,9 +152,6 @@ Business Manager templates.
 The same suite runs in CI on every push and pull request
 ([`.github/workflows/test.yml`](.github/workflows/test.yml)), on Node 22 and 24.
 
-> The original SFRA unit suite is still available as `npm run test:sfra`. It does not
-> cover MultiSafepay code.
-
 ---
 
 ## Scope and known limitations

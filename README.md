@@ -97,7 +97,7 @@ Key files:
 | [`notifyShipments.js`](cartridges/multisafepay/cartridge/scripts/jobs/notifyShipments.js) | The BNPL shipment notification job |
 | [`MultisafepaySettings.js`](cartridges/bm_multisafepay/cartridge/controllers/MultisafepaySettings.js) | Settings page, sync, payment-methods XML, OCAPI import trigger |
 | [`PaymentInstrumentInfo_MultiSafepayPayment.isml`](cartridges/bm_multisafepay/cartridge/templates/default/order/PaymentInstrumentInfo_MultiSafepayPayment.isml) | The order-detail box: status, breakdown, capture and refund |
-| [`metadata/site-import`](metadata/site-import) | Site preferences, custom attributes, the custom object and the service definitions |
+| [`metadata/site-import`](metadata/site-import) | Site preferences, custom attributes, the custom object, the service definitions and the import job |
 
 ---
 

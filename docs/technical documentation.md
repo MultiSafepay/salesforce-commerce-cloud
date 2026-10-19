@@ -340,7 +340,8 @@ the override replaces the whole base form. `forms/default/billing.xml` adds the 
 `.CreateOrder`, `.ListTransactions`, `.RefundOrder`, `.CaptureOrder`, `.GenerateApiToken`. The
 helpers create these services through `LocalServiceRegistry` but perform the HTTP calls with
 `dw/net/HTTPClient`, building each URL from the selected environment. All six are defined in
-`metadata/site-import/services.xml`.
+`metadata/site-import/services.xml`. The import job is defined in
+`metadata/site-import/jobs.xml`.
 
 ---
 
@@ -390,9 +391,10 @@ Registered in `bm_extensions.xml`:
    `Multisafepay_OCAPI_ClientSecret`.
 3. `triggerImportJob()` calls
    `POST https://<instanceHostname>/s/-/dw/data/v24_5/jobs/MSP-ImportPaymentMethods/executions`
-   (200/202 = triggered). The **`MSP-ImportPaymentMethods`** job is not part of this repository;
-   it is created in Business Manager to import the generated archive. Without OCAPI credentials
-   the Custom Objects are still saved and the import must be run manually.
+   (200/202 = triggered). The **`MSP-ImportPaymentMethods`** job is defined in
+   `metadata/site-import/jobs.xml`: one `ImportSiteArchive` step importing
+   `msp-payment-methods.zip` in merge mode, organization context, no schedule. Without OCAPI
+   credentials the Custom Objects are still saved and the import must be run manually.
 
 ### 5.2 `MultisafepayDashboard.js`
 `Start` (GET) renders `multisafepayDashboard/dashboard.isml` with `getAllTransactions`: KPI cards

@@ -76,6 +76,7 @@ internal structure is:
 msp-metadata-import.zip
 └── msp-metadata-import/
     ├── services.xml
+    ├── jobs.xml
     └── meta/
         └── system-objecttype-extensions.xml
 ```
@@ -109,8 +110,9 @@ The instance import completed successfully.
 **4 type-extensions** (SitePreferences, Order, PaymentTransaction,
 OrderPaymentInstrument) and **1 custom-type** (MSPPaymentMethod) is the whole of the
 connector's metadata. A run that reports fewer elements imported an older archive.
-`services.xml` (the six `Multisafepay.*` services) is imported by the same archive and
-appears in the log as a separate section.
+`services.xml` (the six `Multisafepay.*` services) and `jobs.xml` (the
+`MSP-ImportPaymentMethods` job) are imported by the same archive and appear in the log
+as separate sections.
 
 You can confirm the result in the UI too: **Administration → Site Development →
 Custom Object Types** must list **MSPPaymentMethod**.
@@ -165,9 +167,10 @@ configuration. The **"OCAPI setup"** panel on the settings page summarizes it:
 3. In BM: **Merchant Tools → Site Preferences → Custom Preferences → Multisafepay Account
    Settings**, set **OCAPI Client ID** and **OCAPI Client Secret**.
 
-The job itself must exist on the instance with the ID **`MSP-ImportPaymentMethods`**. It
+The job **`MSP-ImportPaymentMethods`** is created by the metadata import (Step 0). It
 imports the archive `msp-payment-methods.zip` that the sync writes to the instance import
-folder (`IMPEX/src/instance`) — for example with the system job step **ImportSiteArchive**.
+folder (`IMPEX/src/instance`) with the system step **ImportSiteArchive**, in merge mode. It
+has no schedule: Sync & Import starts it.
 
 > If OCAPI is not configured, the methods are still synchronized as Custom Objects, but
 > the creation of the SFCC Payment Methods is not started. Import the generated
@@ -465,7 +468,7 @@ The order's **Payment** tab in Business Manager contains a MultiSafepay box with
 - *Cause:* the methods were stored, but the import job could not be started.
   *"OCAPI credentials not configured"* means the OCAPI Client ID or Secret is empty;
   *"Job trigger failed (HTTP …)"* means OCAPI refused the request or the job
-  `MSP-ImportPaymentMethods` does not exist.
+  `MSP-ImportPaymentMethods` does not exist (the metadata import creates it).
 - *What to do:* complete the OCAPI setup (§3, Step 3), or import the generated archive
   manually.
 

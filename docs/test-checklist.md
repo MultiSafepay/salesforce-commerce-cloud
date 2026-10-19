@@ -71,8 +71,8 @@ Run this section in full on every delivery.
       Changes** → *Your Changes have been saved* appears.
 - [ ] **1.8** Automatic import: OCAPI Client ID and Secret are set under **Custom
       Preferences → Multisafepay**. The API client may run the job (OCAPI Data API
-      resource `/jobs/*/executions`, method `post`). A job with ID
-      **`MSP-ImportPaymentMethods`** exists and imports the site archive
+      resource `/jobs/*/executions`, method `post`). The job
+      **`MSP-ImportPaymentMethods`**, created by the metadata import, exists and imports the site archive
       `msp-payment-methods.zip`, which Sync & Import writes to the Impex
       `src/instance` folder → all three are in place. *(Without OCAPI, import
       `msp-payment-methods.zip` by hand from Site Import & Export after each sync. Record

@@ -82,15 +82,20 @@ function loadModel(prefs, coStore) {
             getCustomObject: function (type, key) {
                 var entry = coStore && coStore[key];
                 if (!entry) { return null; }
+                var custom = {};
+                // An attribute the metadata does not define throws on access.
+                Object.defineProperty(custom, 'supportsCapture', {
+                    get: function () {
+                        if (entry.hasAttribute === false) { throw new Error('Unknown dynamic property'); }
+                        return entry.supportsCapture;
+                    }
+                });
                 return {
-                    custom: { supportsCapture: entry.supportsCapture },
+                    custom: custom,
+                    // Reproduces the platform: describe() reports defined attributes
+                    // as undefined. The code under test must not depend on it.
                     describe: function () {
-                        return {
-                            getCustomAttributeDefinition: function (id) {
-                                if (id === 'supportsCapture' && entry.hasAttribute === false) { return null; }
-                                return { id: id };
-                            }
-                        };
+                        return { getCustomAttributeDefinition: function () { return null; } };
                     }
                 };
             }
@@ -107,7 +112,7 @@ function shippingItem(payload) {
     return payload.shopping_cart.items.filter(function (i) { return i.name === 'Shipping'; })[0];
 }
 
-test.describe('transactionData - shipping line item (REQ-2.1.6)', function () {
+test.describe('transactionData - shipping line item', function () {
     test.it('identifies the shipping cost line with the reserved id msp-shipping', function () {
         var TransactionData = loadModel({}, {});
         var payload = new TransactionData(orderStub(), 'en_NL', 'IDEAL', 84.69).transactionData;
@@ -129,7 +134,7 @@ test.describe('transactionData - shipping line item (REQ-2.1.6)', function () {
     });
 });
 
-test.describe('transactionData - manual capture (REQ-2.2.2)', function () {
+test.describe('transactionData - manual capture', function () {
     var capturable = { VISA: { supportsCapture: true } };
     var notCapturable = { IDEAL: { supportsCapture: false } };
 
@@ -140,7 +145,7 @@ test.describe('transactionData - manual capture (REQ-2.2.2)', function () {
     });
 
     test.it('does NOT request manual capture for a method that does not support it', function () {
-        // The 4th QA round showed "capture": "manual" being sent for IDEAL.
+        // "capture": "manual" used to be sent for IDEAL.
         var TransactionData = loadModel({ Multisafepay_ManualCapture: true }, notCapturable);
         var payload = new TransactionData(orderStub(), 'en_NL', 'IDEAL', 84.69).transactionData;
         assert.strictEqual(payload.capture, undefined);

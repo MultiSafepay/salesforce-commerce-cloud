@@ -47,6 +47,29 @@
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>false</externally-managed-flag>
             </attribute-definition>
+            <attribute-definition attribute-id="Multisafepay_Environment">
+                <display-name xml:lang="x-default">Multisafepay Environment</display-name>
+                <description xml:lang="x-default">Which MultiSafepay environment the connector uses: "test" or "live". Set from the Multisafepay settings page.</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <default-value>test</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="Multisafepay_ClientKey">
+                <display-name xml:lang="x-default">Multisafepay API Key (legacy)</display-name>
+                <description xml:lang="x-default">Legacy single API key, used only when the Test or Live API key for the selected environment is empty.</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="Multisafepay_OMSOption">
+                <display-name xml:lang="x-default">Multisafepay OMS Salesforce</display-name>
+                <description xml:lang="x-default">Set from the Multisafepay settings page when the system is integrated with Salesforce Order Management.</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <default-value>false</default-value>
+            </attribute-definition>
         </custom-attribute-definitions>
         <group-definitions>
             <attribute-group group-id="Multisafepay">
@@ -64,7 +87,7 @@
         </group-definitions>
     </type-extension>
 
-    <!-- ===== Order: BNPL shipment notification tracking (REQ-2.1.6) ===== -->
+    <!-- ===== Order: BNPL shipment notification tracking ===== -->
     <type-extension type-id="Order">
         <custom-attribute-definitions>
             <attribute-definition attribute-id="Multisafepay_ShipmentNotified">
@@ -96,17 +119,58 @@
             </attribute-definition>
             <attribute-definition attribute-id="Multisafepay_CaptureExpiry">
                 <display-name xml:lang="x-default">Multisafepay Capture Expiry</display-name>
-                <description xml:lang="x-default">Deadline reported by MSP by which an authorized (manual capture) payment must be captured; after it the authorization is released. Shown in the order Payment tab (REQ-2.2.2).</description>
+                <description xml:lang="x-default">Deadline reported by MSP by which an authorized (manual capture) payment must be captured; after it the authorization is released. Shown in the order Payment tab.</description>
                 <type>string</type>
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>true</externally-managed-flag>
             </attribute-definition>
             <attribute-definition attribute-id="Multisafepay_PaymentBreakdown">
                 <display-name xml:lang="x-default">Multisafepay Payment Breakdown</display-name>
-                <description xml:lang="x-default">JSON array of the payment_methods reported by MSP (type + amount), used to display coupon/gift-card + payment-method breakdowns applied on the MSP hosted page (ADD-1.3).</description>
+                <description xml:lang="x-default">JSON array of the payment_methods reported by MSP (type + amount), used to display coupon/gift-card + payment-method breakdowns applied on the MSP hosted page.</description>
                 <type>text</type>
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>true</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="Multisafepay_Gateway">
+                <display-name xml:lang="x-default">Multisafepay Gateway</display-name>
+                <description xml:lang="x-default">MultiSafepay gateway the payment was made with. Updated by the webhook when the shopper switches method on the payment page.</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="Multisafepay_OrderStatus">
+                <display-name xml:lang="x-default">Multisafepay Order Status</display-name>
+                <description xml:lang="x-default">Last order status reported by MultiSafepay (for example completed, uncleared, refunded).</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="Multisafepay_AmountRefunded">
+                <display-name xml:lang="x-default">Multisafepay Amount Refunded</display-name>
+                <description xml:lang="x-default">Total amount refunded, as reported by MultiSafepay.</description>
+                <type>double</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="Multisafepay_log">
+                <display-name xml:lang="x-default">Multisafepay Order Response</display-name>
+                <description xml:lang="x-default">Response returned by MultiSafepay when the order was created.</description>
+                <type>text</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+        </custom-attribute-definitions>
+    </type-extension>
+
+    <!-- ===== OrderPaymentInstrument ===== -->
+    <type-extension type-id="OrderPaymentInstrument">
+        <custom-attribute-definitions>
+            <attribute-definition attribute-id="Multisafepay_Gateway">
+                <display-name xml:lang="x-default">Multisafepay Gateway</display-name>
+                <description xml:lang="x-default">MultiSafepay gateway selected for this payment instrument.</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
             </attribute-definition>
         </custom-attribute-definitions>
     </type-extension>

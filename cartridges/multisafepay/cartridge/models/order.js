@@ -174,7 +174,7 @@ function OrderModel(lineItemContainer, options) {
             this.shippedToFirstName = shippingModels[0].shippingAddress.firstName || '';
             this.shippedToLastName = shippingModels[0].shippingAddress.lastName || '';
         }
-        // ADD-1.3: expose the gift-card breakdown for the order/basket detail.
+        // Expose the gift-card breakdown for the order/basket detail.
         // Read from the passed lineItemContainer (order OR basket) — the previous
         // implementation used BasketMgr.getCurrentBasket(), which is null on the
         // order confirmation/detail, so gift cards never appeared there. Supports

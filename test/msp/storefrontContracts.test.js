@@ -3,7 +3,7 @@
 /**
  * Guards for behaviour that lives in templates and form definitions, which the
  * unit tests above cannot exercise. They are deliberately narrow: each one pins
- * a specific QA finding so a future edit cannot quietly reintroduce it.
+ * a specific defect so a future edit cannot quietly reintroduce it.
  */
 
 var test = require('node:test');
@@ -25,7 +25,7 @@ var PAYMENT_OPTIONS = 'cartridges/multisafepay/cartridge/templates/default/check
 var ADDRESS_FORM = 'cartridges/multisafepay/cartridge/forms/default/address.xml';
 var FORMS_PROPERTIES = 'cartridges/multisafepay/cartridge/templates/resources/forms.properties';
 
-test.describe('checkout payment options template (REQ-1.1.4 / REQ-1.4.4)', function () {
+test.describe('checkout payment options template', function () {
     test.it('derives the country from the BILLING address, not the shipping address', function () {
         var isml = read(PAYMENT_OPTIONS);
         var billingIndex = isml.indexOf('currentBasket.billingAddress.countryCode');
@@ -67,7 +67,7 @@ test.describe('checkout payment options template (REQ-1.1.4 / REQ-1.4.4)', funct
     });
 });
 
-test.describe('address form country list (REQ-1.1.4)', function () {
+test.describe('address form country list', function () {
     var REQUIRED = ['NL', 'DE', 'IT', 'BE', 'FR', 'ES', 'AT', 'PT', 'PL', 'DK', 'SE', 'NO', 'GB', 'IE', 'FI'];
 
     test.it('offers the markets MultiSafepay payment methods are restricted to', function () {
@@ -96,7 +96,7 @@ test.describe('address form country list (REQ-1.1.4)', function () {
     });
 });
 
-test.describe('BM order payment detail (REQ-2.2.2)', function () {
+test.describe('BM order payment detail', function () {
     var TEMPLATE = 'cartridges/bm_multisafepay/cartridge/templates/default/order/PaymentInstrumentInfo_MultiSafepayPayment.isml';
 
     test.it('does not hide Capture merely because the financial status is unknown', function () {
@@ -111,8 +111,8 @@ test.describe('BM order payment detail (REQ-2.2.2)', function () {
     test.it('decides manual capture from the order, not only from configuration', function () {
         // In the Business Manager order view the site preference and the
         // site-scoped Custom Object read as empty rather than failing, which
-        // silently hid the button on order 00007905 — a Visa authorized with
-        // capture=manual and capture_remain=8469 on the MultiSafepay side.
+        // silently hid the button on a Visa payment authorized with
+        // capture=manual and still awaiting capture on the MultiSafepay side.
         var isml = read(TEMPLATE);
         assert.ok(isml.indexOf('mspCaptureProvenByOrder') > -1,
             'expected the capture-expiry proof carried by the order itself');
@@ -125,7 +125,7 @@ test.describe('BM order payment detail (REQ-2.2.2)', function () {
     });
 
     test.it('records the capture decision where log settings cannot swallow it', function () {
-        // The multisafepay custom log category is off on the QA sandbox, so every
+        // The multisafepay custom log category can be off on an instance, so every
         // Logger call there is discarded. The diagnosis has to survive that.
         var isml = read(TEMPLATE);
         assert.ok(isml.indexOf('<!-- ${mspCaptureDiagnostics} -->') > -1,
@@ -147,11 +147,32 @@ test.describe('BM order payment detail (REQ-2.2.2)', function () {
             'expected the tolerant direct read');
     });
 
+    test.it('no cartridge code relies on describe().getCustomAttributeDefinition()', function () {
+        // It has reported defined attributes as undefined, silently emptying the
+        // values behind it. Read or write the attribute inside a try/catch instead.
+        var offenders = [];
+        ['cartridges/multisafepay', 'cartridges/bm_multisafepay'].forEach(function (dir) {
+            (function walk(rel) {
+                fs.readdirSync(path.join(ROOT, rel), { withFileTypes: true }).forEach(function (entry) {
+                    var child = rel + '/' + entry.name;
+                    if (entry.isDirectory()) { walk(child); return; }
+                    if (!/\.(js|isml)$/.test(entry.name)) { return; }
+                    read(child).split('\n').forEach(function (line, i) {
+                        var code = line.replace(/\/\/.*$/, '');
+                        if (/^\s*\*/.test(code)) { return; }
+                        if (code.indexOf('getCustomAttributeDefinition(') > -1) { offenders.push(child + ':' + (i + 1)); }
+                    });
+                });
+            }(dir));
+        });
+        assert.deepStrictEqual(offenders, []);
+    });
+
     test.it('never compares a raw custom attribute with strict equality', function () {
         // SFCC returns custom string attributes as Java String objects. `attr ===
         // 'completed'` is therefore false no matter what the text says, which is
-        // what made awaitingCapture false on order 00008001 — and what rendered
-        // the status in grey instead of green throughout the fourth QA round.
+        // what made awaitingCapture false — and what rendered
+        // the status in grey instead of green.
         var isml = read(TEMPLATE);
         var raw = isml.match(/mspStatus\s*===/g) || [];
         assert.strictEqual(raw.length, 0,
@@ -172,7 +193,7 @@ test.describe('BM order payment detail (REQ-2.2.2)', function () {
     });
 });
 
-test.describe('obsolete configuration is gone (REQ-1.1.4)', function () {
+test.describe('obsolete configuration is gone', function () {
     test.it('no longer exposes the Target Countries preference', function () {
         var meta = read('metadata/site-import/meta/system-objecttype-extensions.xml');
         assert.ok(

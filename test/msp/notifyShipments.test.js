@@ -16,18 +16,27 @@ var STATUS_ERROR = 3;
  */
 function orderStub(opts) {
     var custom = {};
-    if (opts.notified !== undefined) { custom.Multisafepay_ShipmentNotified = opts.notified; }
+    var flag = opts.notified;
     var hasAttribute = opts.hasAttribute !== false;
+    // An attribute the metadata does not define throws on access. `writeFails`
+    // models an attribute that reads as empty but cannot be saved.
+    Object.defineProperty(custom, 'Multisafepay_ShipmentNotified', {
+        get: function () {
+            if (!hasAttribute) { throw new Error('Unknown dynamic property'); }
+            return flag;
+        },
+        set: function (value) {
+            if (!hasAttribute || opts.writeFails) { throw new Error('Unknown dynamic property'); }
+            flag = value;
+        }
+    });
     return {
         orderNo: opts.orderNo,
         custom: custom,
+        // Reproduces the platform: describe() reports defined attributes as
+        // undefined. The job must not depend on it.
         describe: function () {
-            return {
-                getCustomAttributeDefinition: function (id) {
-                    if (id === 'Multisafepay_ShipmentNotified' && !hasAttribute) { return null; }
-                    return { id: id };
-                }
-            };
+            return { getCustomAttributeDefinition: function () { return null; } };
         },
         getPaymentInstruments: function (method) {
             if (method === 'MultiSafepayPayment' && opts.isMsp !== false) { return [{}]; }
@@ -132,7 +141,22 @@ test.describe('notifyShipments - shipment data', function () {
         assert.strictEqual(ctx.notifyCalls[0].shipmentData.carrier, 'PostNL');
     });
 
+    test.it('reads the carrier even when the shipment has no tracking number', function () {
+        // An order marked shipped from Business Manager normally carries no
+        // tracking number. Reading the carrier only inside the tracking-number
+        // branch left the PATCH body with neither field, and MSP answered
+        // HTTP 410 "Required fields: tracktrace_code, carrier, ship_date".
+        var ctx = loadJob({
+            orders: [orderStub({ orderNo: '1', notified: false, carrier: 'PostNL' })]
+        });
+        ctx.job.run();
+        assert.strictEqual(ctx.notifyCalls[0].shipmentData.carrier, 'PostNL');
+    });
+
     test.it('still notifies when there is no tracking data at all', function () {
+        // tracktrace_code stays absent here on purpose: updateOrderShipped owns
+        // the required-field contract and substitutes the order number, so the
+        // job does not invent a tracking code of its own.
         var ctx = loadJob({ orders: [orderStub({ orderNo: '1', notified: false })] });
         ctx.job.run();
         assert.strictEqual(ctx.notifyCalls.length, 1);
@@ -150,6 +174,9 @@ test.describe('notifyShipments - failures are visible in Job History', function 
         var status = ctx.job.run();
         assert.strictEqual(status.code, STATUS_ERROR, 'a failed notification must not report OK');
         assert.ok(String(status.message).indexOf('Invalid API key') > -1, status.message);
+        assert.ok(String(status.message).indexOf('00007601') > -1,
+            'the failing order number must reach Job History: where the '
+            + 'multisafepay log category is disabled this message is the only diagnostic');
     });
 
     test.it('fails fast when no API key is configured', function () {
@@ -168,6 +195,17 @@ test.describe('notifyShipments - failures are visible in Job History', function 
         var status = ctx.job.run();
         assert.strictEqual(ctx.notifyCalls.length, 0);
         assert.strictEqual(status.code, STATUS_ERROR);
+        assert.ok(String(status.message).indexOf('metadata') > -1, status.message);
+    });
+
+    test.it('fails loudly when the notification is sent but the flag cannot be saved', function () {
+        var ctx = loadJob({
+            orders: [orderStub({ orderNo: '7', writeFails: true })]
+        });
+        var status = ctx.job.run();
+        assert.strictEqual(ctx.notifyCalls.length, 1);
+        assert.strictEqual(status.code, STATUS_ERROR);
+        assert.ok(String(status.message).indexOf('order 7') > -1, status.message);
         assert.ok(String(status.message).indexOf('metadata') > -1, status.message);
     });
 

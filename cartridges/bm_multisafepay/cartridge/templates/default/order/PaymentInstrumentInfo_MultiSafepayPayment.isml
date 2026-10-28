@@ -12,7 +12,7 @@
 <isset name="mspCapturedAt" value="${mspCapturedAtRaw != null && ('' + mspCapturedAtRaw).length > 10 ? ('' + mspCapturedAtRaw) : null}" scope="page" />
 <isset name="mspManualCapture" value="${dw.system.Site.current.preferences.custom.Multisafepay_ManualCapture === true}" scope="page" />
 <isscript>
-    // REQ-2.2.2: deciding when to offer "Capture".
+    // Deciding when to offer "Capture".
     //
     // The previous rule was an ALLOW-list on the financial status
     // (initialized | uncleared). Any order whose financial status had not been
@@ -41,7 +41,7 @@
      * lookup. That guard is what hid the Capture button: Multisafepay_OrderStatus, which
      * is read directly a few lines above, renders fine, while both attributes
      * behind the guard came back empty on orders that demonstrably carry them
-     * (00007905 and 00008001 both have capture=manual and a capture_expiry). The
+     * (orders with capture=manual and a capture_expiry). The
      * guard was answering "not defined" for attributes that are defined, so the
      * values never reached the template.
      *
@@ -90,8 +90,8 @@
     // shipment (see the MSP-NotifyShipments job), never by this button.
     //
     // Compare on the normalised copy. This line used to test the raw attribute for
-    // strict equality with the literal 'completed', and was false on every order in
-    // the fourth QA round: the attribute is a Java String object, and strict equality
+    // strict equality with the literal 'completed', and was false on every order:
+    // the attribute is a Java String object, and strict equality
     // against a primitive can never match one, whatever the text says.
     var mspStatusText = String(mspStatus || '').toLowerCase();
     var mspAuthorized = mspStatusText === 'completed';
@@ -107,7 +107,7 @@
     // the site-scoped MSPPaymentMethod Custom Object are not reliably readable —
     // reading them returns nothing rather than failing, which silently turned into
     // "manual capture is off" and hid the button on orders that were plainly
-    // awaiting capture (order 00007905: capture=manual, capture_remain=8469,
+    // awaiting capture (capture=manual, a non-zero capture_remain,
     // financial status 'initialized', and still no button).
     //
     // Configuration may therefore only ADD confidence, never remove it.
@@ -141,7 +141,7 @@
         // never let diagnostics break the order detail
     }
 
-    // ADD-1.3: gift-card breakdown. Collect every GIFT_CERTIFICATE instrument on
+    // Gift-card breakdown. Collect every GIFT_CERTIFICATE instrument on
     // the order (supports multiple) and the amount covered by the MSP method, so
     // the merchant sees the full split.
     var mspGiftCards = [];
@@ -161,7 +161,7 @@
         mspGiftCards = [];
     }
 
-    // ADD-1.3: coupon/gift-card breakdown applied on the MSP hosted page, parsed
+    // Coupon/gift-card breakdown applied on the MSP hosted page, parsed
     // from the payment_methods stored by the webhook (Multisafepay_PaymentBreakdown).
     var mspPaymentBreakdown = [];
     try {
@@ -194,7 +194,7 @@
 			<input type="hidden" name="Order_Number" id="order_number" value="${pdict.Order.currentOrderNo}">
 			<input type="hidden" name="Currency_Code" id="currency_code" value="${pdict.Order.getCurrencyCode()}">
 			<input type="hidden" name="Invoice_No" id="invoice_no" value="${pdict.Order.getInvoiceNo()}">
-			<input class="form-check-input" type="text" name="Refund_Amount" id="amount" placeholder="Amount to refund (leave empty for full refund)" value="">
+			<input class="form-check-input" type="text" name="Refund_Amount" id="amount" placeholder="Amount to refund" value="">
 			<button href="${URLUtils.url('Multisafepay-RefundOrder','orderNumber', pdict.Order.currentOrderNo)}" class="btn btn-primary btn-block btn-order-refund" id="order-refund"> REFUND PAYMENT </button>
 			<isif condition="${mspShowCapture}">
 				<button class="btn btn-success btn-block btn-order-capture" id="order-capture"> CAPTURE FULL PAYMENT </button>

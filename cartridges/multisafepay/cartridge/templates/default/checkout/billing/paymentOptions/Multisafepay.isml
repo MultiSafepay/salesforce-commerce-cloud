@@ -8,7 +8,7 @@
     var basketCurrency = currentBasket ? currentBasket.getCurrencyCode() : null;
     // 'customer' and 'request' are implicit ISML top-level objects
 
-    // REQ-1.1.4: country availability is decided by the BILLING address — that is
+    // Country availability is decided by the BILLING address — that is
     // where the payment is actually processed, and it is what MSP validates the
     // method against. The shipping address (used previously) can legitimately be
     // in a different country and was hiding methods the customer could really use.
@@ -26,7 +26,7 @@
     }
     var basketCountryCode = mspCountryCode;
 
-    // item 7 / REQ-1.4.4: validate the active API key. An invalid key (401/403)
+    // Validate the active API key. An invalid key (401/403)
     // must hide all methods and block checkout. A transient error must NOT block
     // checkout — methods keep rendering from the synced Custom Objects. A positive
     // result is cached PER KEY so the token round-trip is not repeated on every
@@ -50,7 +50,7 @@
         // transient error (network / 5xx): do not block, do not cache.
     }
 
-    // REQ-1.4.4: one single, generic, non-technical message for every
+    // One single, generic, non-technical message for every
     // configuration failure. The distinction between "invalid" and "not
     // configured" is kept server-side for the log only.
     if (mspKeyError) {
@@ -128,4 +128,7 @@
 
 <script type="text/javascript">
     window.componentTokenURL = "${URLUtils.https('Multisafepay-GetComponentToken')}";
+    // Read by checkout/giftCard.js for the gift certificate Apply and Remove actions.
+    window.validateGift = "${URLUtils.https('Multisafepay-ValidateGift')}";
+    window.removeGiftCard = "${URLUtils.https('Multisafepay-RemoveGiftCard')}";
 </script>

@@ -6,7 +6,7 @@
                 "@supports-parallel-execution": "false",
                 "@supports-site-context": "true",
                 "@supports-organization-context": "false",
-                "description": "REQ-2.1.6 — Notifies MultiSafepay of orders marked as Shipped so BNPL (Riverty/Klarna/Billink/in3) financial status is updated. Run per site, e.g. hourly.",
+                "description": "Notifies MultiSafepay of orders marked as Shipped so BNPL (Riverty/Klarna/Billink/in3) financial status is updated. Run per site, e.g. hourly.",
                 "module": "multisafepay/cartridge/scripts/jobs/notifyShipments.js",
                 "function": "run",
                 "transactional": "false",

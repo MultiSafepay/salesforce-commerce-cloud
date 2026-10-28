@@ -37,6 +37,8 @@ function loadHelper(opts) {
     sfcc.registerAll({
         '*/cartridge/config/apiConfig': { getApplicablePaymentMethods: {}, createOrder: {} },
         'dw/util/HashMap': function () {},
+        'dw/util/Calendar': function (date) { this.date = date; },
+        'dw/util/StringUtils': { formatCalendar: function () { return '2026-09-02 10:00:00'; } },
         'dw/system/Logger': sfcc.loggerStub(),
         'dw/net/HTTPClient': HTTPClient,
         'dw/svc/LocalServiceRegistry': { createService: function () { return {}; } },
@@ -57,7 +59,7 @@ function loadHelper(opts) {
     return { helper: sfcc.loadCartridgeModule(HELPER), calls: calls };
 }
 
-test.describe('getApplicablePaymentMethods - endpoint (REQ-1.1.4)', function () {
+test.describe('getApplicablePaymentMethods - endpoint', function () {
     test.it('omits country and currency when the caller does not provide them', function () {
         var ctx = loadHelper();
         ctx.helper.getApplicablePaymentMethods({ apiToken: 'k' });
@@ -106,7 +108,7 @@ test.describe('getApplicablePaymentMethods - endpoint (REQ-1.1.4)', function () 
     });
 });
 
-test.describe('updateOrderShipped - BNPL shipment notification (REQ-2.1.6)', function () {
+test.describe('updateOrderShipped - BNPL shipment notification', function () {
     test.it('uses PATCH on the order resource', function () {
         var ctx = loadHelper();
         ctx.helper.updateOrderShipped('key', '00007601', {});
@@ -117,18 +119,28 @@ test.describe('updateOrderShipped - BNPL shipment notification (REQ-2.1.6)', fun
     test.it('sends status shipped and authenticates the call', function () {
         var ctx = loadHelper();
         ctx.helper.updateOrderShipped('key', '00007601', {});
-        assert.deepStrictEqual(JSON.parse(ctx.calls[0].body), { status: 'shipped' });
+        assert.strictEqual(JSON.parse(ctx.calls[0].body).status, 'shipped');
         assert.strictEqual(ctx.calls[0].headers.Authorization, 'Bearer key');
         assert.strictEqual(ctx.calls[0].headers['Content-Type'], 'application/json');
     });
 
-    test.it('omits empty optional fields rather than sending empty strings', function () {
+    test.it('always sends the three fields MSP requires, never blank', function () {
+        // Observed against the MultiSafepay test API: a body of {"status":"shipped"}
+        // is answered with HTTP 410 "Required fields: tracktrace_code, carrier,
+        // ship_date". An earlier version omitted them when empty, on the strength
+        // of a note that had never been tested against the API.
         var ctx = loadHelper();
         ctx.helper.updateOrderShipped('key', '00007601', { tracktrace_code: '', carrier: '', ship_date: '' });
         var body = JSON.parse(ctx.calls[0].body);
-        assert.ok(!('tracktrace_code' in body), 'empty tracktrace_code must not be sent');
-        assert.ok(!('carrier' in body), 'empty carrier must not be sent');
-        assert.ok(!('ship_date' in body), 'empty ship_date must not be sent');
+        assert.ok(body.tracktrace_code, 'tracktrace_code must be present and non-empty');
+        assert.ok(body.carrier, 'carrier must be present and non-empty');
+        assert.ok(body.ship_date, 'ship_date must be present and non-empty');
+    });
+
+    test.it('falls back to the order number when there is no tracking code', function () {
+        var ctx = loadHelper();
+        ctx.helper.updateOrderShipped('key', '00007601', { carrier: 'PostNL', ship_date: '2026-09-02 10:00:00' });
+        assert.strictEqual(JSON.parse(ctx.calls[0].body).tracktrace_code, '00007601');
     });
 
     test.it('forwards the tracking data when it is available', function () {

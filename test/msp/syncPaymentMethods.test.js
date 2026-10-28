@@ -65,8 +65,10 @@ function loadSyncRoute(opts) {
         var custom = { gatewayId: key };
         return {
             custom: custom,
+            // Reproduces the platform: describe() reports defined attributes as
+            // undefined. The code under test must not depend on it.
             describe: function () {
-                return { getCustomAttributeDefinition: function (id) { return { id: id }; } };
+                return { getCustomAttributeDefinition: function () { return null; } };
             }
         };
     }
@@ -163,7 +165,7 @@ function loadSyncRoute(opts) {
     return { run: run, sink: sink, cos: cos, probes: probes };
 }
 
-test.describe('SyncPaymentMethods - Custom Objects (REQ-1.1.4)', function () {
+test.describe('SyncPaymentMethods - Custom Objects', function () {
     test.it('stores no country restriction for a method with allowed_countries: []', function () {
         var ctx = loadSyncRoute({
             apiMethods: [{ id: 'MASTERCARD', name: 'MasterCard', allowed_countries: [] }]
@@ -206,7 +208,7 @@ test.describe('SyncPaymentMethods - Custom Objects (REQ-1.1.4)', function () {
     });
 });
 
-test.describe('SyncPaymentMethods - generated payment-methods.xml (REQ-1.1.4)', function () {
+test.describe('SyncPaymentMethods - generated payment-methods.xml', function () {
     test.it('emits an EMPTY countries element so a stale restriction is cleared', function () {
         // Regression guard: MSP_MASTERCARD had been imported with 6 countries and
         // no NL. Omitting <countries> would leave that assignment in place and the

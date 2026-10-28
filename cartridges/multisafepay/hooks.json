@@ -1,0 +1,32 @@
+{
+    "hooks": [
+        {
+            "name": "app.payment.processor.cybersource_bml",
+            "script": "./cartridge/scripts/hooks/payment/processor/cybersource_bml"
+        },
+        {
+            "name": "app.payment.form.processor.cybersource_bml",
+            "script": "./cartridge/scripts/hooks/payment/processor/cybersource_bml_form_processor"
+        },
+        {
+            "name": "app.payment.processor.multisafepaypayment",
+            "script": "./cartridge/scripts/hooks/payment/processor/multisafepaypayment"
+        },
+        {
+            "name": "app.payment.form.processor.multisafepaypayment",
+            "script": "./cartridge/scripts/hooks/payment/processor/multisafepaypayment_form_processor"
+        },
+        {
+            "name": "app.payment.processor.basic_gift_certificate",
+            "script": "./cartridge/scripts/hooks/payment/processor/basic_gift_certificate"
+        },
+        {
+            "name": "app.payment.form.processor.basic_gift_certificate",
+            "script": "./cartridge/scripts/hooks/payment/processor/basic_gift_certificate_form_processor"
+        },
+        { 
+            "name": "dw.order.payment.authorize", 
+            "script": "./cartridge/scripts/hooks/authorize.js" 
+        }
+    ]
+}

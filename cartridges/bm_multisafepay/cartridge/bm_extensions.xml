@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<extensions xmlns="http://www.demandware.com/xml/bmmodules/2007-12-11" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.demandware.com/xml/bmmodules/2007-12-11 bmext.xsd">
+	<menuaction id="multisafepay_settings" menupath="site-prefs" position="2" site="true">
+        <name xml:lang="x-default">Multisafepay settings</name>
+        <short_description xml:lang="x-default">Multisafepay settings</short_description>
+        <description xml:lang="x-default">Multisafepay settings</description>
+        <exec pipeline="MultisafepaySettings" node="Start"/>
+        <sub-pipelines>
+            <pipeline name="MultisafepaySettings"/>
+        </sub-pipelines>
+        <icon>icons/logo.svg</icon>
+    </menuaction>
+    <menuaction id="multisafepay_dashboard" menupath="analytics" position="2" site="true">
+        <name xml:lang="x-default">Multisafepay dashboard</name>
+        <short_description xml:lang="x-default">Multisafepay dashboard</short_description>
+        <description xml:lang="x-default">Multisafepay dashboard</description>
+        <exec pipeline="MultisafepayDashboard" node="Start"/>
+        <sub-pipelines>
+            <pipeline name="MultisafepayDashboard"/>
+        </sub-pipelines>
+        <icon>icons/logo.svg</icon>
+    </menuaction>
+</extensions>

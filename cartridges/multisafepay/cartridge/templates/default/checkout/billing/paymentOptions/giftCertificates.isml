@@ -1,0 +1,8 @@
+<div class="gift-cart-component">
+    <isloop iterator="${pdict.order.giftCards}" var="giftCard">
+        <div class="type py-1">
+            Gift Certificate: <isprint value="${giftCard.maskedGiftCertificateCode}">
+            <button class="btn btn-primary remove-giftcert">Remove</button>
+        </div>
+    </isloop>
+</div>

@@ -1,0 +1,13 @@
+<isloop items="${pdict.payments}" var="payment">
+    <div class="row border py-3 mx-0 my-2 align-items-center">
+        <div class="col-md-auto">
+            <input type="radio" id="${payment.id}" data-gateway="${payment.name}" name="recurring-payment-method" value="${payment.id}">
+        </div>
+        <div class="col-md-auto p-0 ml-1 mr-3">
+            <img class="msp-ui-method-logo" title="${payment.name}" alt="${payment.name}" width="50" src="${payment.icon_urls.medium}">
+        </div>
+        <div class="col">
+            <div class="msp-ui-card-name">${payment.name}</div>
+        </div>
+    </div>
+</isloop>

@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+@import "variables";
+
+body {
+    font-family: "Roboto", sans-serif;
+}
+
+span.logo-text {
+    color: #1db5f0;
+    background-color: #e5f6fd;
+}
+
+//coupon section
+
+.coupon-price-adjustment + .coupon-price-adjustment {
+    margin-top: 0.625rem;
+}
+
+.coupon-price-adjustment {
+    background-color: $white;
+    padding: 0.625em;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    border-radius: 0.1875rem;
+}
+
+.coupon-promotion-relationship {
+    font-size: 0.813em;
+    padding-left: 1rem;
+    margin-bottom: 0;
+}
+
+.coupons-and-promos {
+    margin-bottom: 0.625rem;
+    padding-right: 0;
+    padding-left: 0;
+}
+
+.coupon-code {
+    font-size: 1.125em;
+}
+
+.coupon-applied {
+    color: $success;
+    font-size: 0.813em;
+}
+
+.coupon-not-applied {
+    color: $danger;
+    font-size: 0.813em;
+}
+
+.coupon-error {
+    color: $danger;
+    margin-top: 0.25rem;
+}
+
+.coupon-missing-error {
+    display: none;
+}

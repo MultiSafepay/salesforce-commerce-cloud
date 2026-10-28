@@ -1,0 +1,19 @@
+<!--- applicable credit cards--->
+<div class="tab-pane bml-content" id="bml-content" role="tabpanel">
+    <fieldset class="payment-form-fields">
+        <input type="hidden" class="form-control"
+               name="${pdict.forms.billingForm.paymentMethod.htmlName}"
+               value="${paymentOption.ID}">
+        <div class="row m-0 border py-3">
+            <div class="col-md-auto">
+                <input name="brandCode" type="radio" id="${paymentOption.ID}">
+            </div>
+            <div class="col-md-auto p-0 ml-1 mr-3">
+                <img class="msp-ui-method-logo" title="${paymentOption.name}" alt="${paymentOption.name}" width="50" src="${URLUtils.staticURL('icons/BML.png')}">
+            </div>
+            <div class="col">
+                <div class="msp-ui-card-name">${paymentOption.name}</div>
+            </div>
+        </div>
+    </fieldset>
+</div>

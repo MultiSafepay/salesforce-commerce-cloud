@@ -1,0 +1,134 @@
+<!--- MSP Payment Methods (SFCC-filtered from BM config) --->
+<isscript>
+    var multisafepayHelper = require('*/cartridge/scripts/helpers/multisafepayHelper');
+    var Resource = require('dw/web/Resource');
+    var BasketMgr = require('dw/order/BasketMgr');
+    var currentBasket = BasketMgr.getCurrentBasket();
+    var basketAmount = currentBasket ? currentBasket.totalGrossPrice.value : 0;
+    var basketCurrency = currentBasket ? currentBasket.getCurrencyCode() : null;
+    // 'customer' and 'request' are implicit ISML top-level objects
+
+    // Country availability is decided by the BILLING address — that is
+    // where the payment is actually processed, and it is what MSP validates the
+    // method against. The shipping address (used previously) can legitimately be
+    // in a different country and was hiding methods the customer could really use.
+    // Fall back to the shipping address, then to the request locale, so the very
+    // first render (before any address is entered) still shows a sensible list.
+    var mspCountryCode = null;
+    if (currentBasket && currentBasket.billingAddress && currentBasket.billingAddress.countryCode) {
+        mspCountryCode = currentBasket.billingAddress.countryCode.value;
+    }
+    if (!mspCountryCode && currentBasket && currentBasket.defaultShipment && currentBasket.defaultShipment.shippingAddress) {
+        mspCountryCode = currentBasket.defaultShipment.shippingAddress.countryCode.value;
+    }
+    if (!mspCountryCode) {
+        mspCountryCode = request.locale.indexOf('_') > -1 ? request.locale.split('_')[1] : 'US';
+    }
+    var basketCountryCode = mspCountryCode;
+
+    // Validate the active API key. An invalid key (401/403)
+    // must hide all methods and block checkout. A transient error must NOT block
+    // checkout — methods keep rendering from the synced Custom Objects. A positive
+    // result is cached PER KEY so the token round-trip is not repeated on every
+    // billing render, but changing the key (e.g. to an invalid one) invalidates the
+    // cache and forces a re-check — the previous session-wide 'true' cache masked a
+    // key that had become invalid.
+    var mspApiKey = multisafepayHelper.getActiveApiKey(dw.system.Site.getCurrent());
+    var mspKeyError = null; // 'notConfigured' | 'invalid' | null
+    if (!mspApiKey) {
+        mspKeyError = 'notConfigured';
+    } else if (session.privacy.mspValidatedKey !== mspApiKey) {
+        var mspTokenCheck = multisafepayHelper.generateApiToken(mspApiKey);
+        if (mspTokenCheck.success) {
+            session.privacy.mspValidatedKey = mspApiKey; // cache validity for THIS key only
+        } else if (mspTokenCheck.invalidKey) {
+            mspKeyError = 'invalid';
+            if (session.privacy.mspValidatedKey === mspApiKey) {
+                delete session.privacy.mspValidatedKey;
+            }
+        }
+        // transient error (network / 5xx): do not block, do not cache.
+    }
+
+    // One single, generic, non-technical message for every
+    // configuration failure. The distinction between "invalid" and "not
+    // configured" is kept server-side for the log only.
+    if (mspKeyError) {
+        dw.system.Logger.getLogger('multisafepay', 'MSP').error(
+            '[Checkout] MultiSafepay is not usable: API key {0}. No payment method rendered.',
+            mspKeyError === 'invalid' ? 'is invalid (rejected by MSP)' : 'is not configured'
+        );
+    }
+
+    var mspMethods = mspKeyError
+        ? []
+        : multisafepayHelper.getApplicableMSPMethods(customer, basketCountryCode, basketAmount, basketCurrency);
+</isscript>
+
+<div class="tab-pane active multisafepay-content" id="multisafepay-content" role="tabpanel">
+    <fieldset class="payment-form-fields">
+        <input type="hidden" class="form-control"
+               name="${pdict.forms.billingForm.paymentMethod.htmlName}"
+               value="${mspPaymentOptionID}"
+        >
+        <input type="hidden" class="form-control"
+               name="${pdict.forms.billingForm.gatewayMSP.htmlName}"
+               value="" id="gatewayMSP">
+
+        <!--- Payment method list from Custom Objects --->
+        <div id="mspPaymentMethodsList">
+            <isif condition="${mspKeyError}">
+                <div class="alert alert-danger msp-apikey-error" role="alert">
+                    ${Resource.msg('msp.error.unavailable', 'multisafepay', 'Online payment is temporarily unavailable. Please contact the store for assistance.')}
+                </div>
+                <script>
+                    (function () {
+                        var selectors = 'button.submit-payment, button.place-order, .next-step-button button';
+                        document.querySelectorAll(selectors).forEach(function (btn) { btn.disabled = true; });
+                    })();
+                </script>
+            <iselseif condition="${mspMethods && mspMethods.length > 0}"/>
+                <isloop items="${mspMethods}" var="mspMethod" status="loopstatus">
+                    <div class="row border py-3 mx-0 my-2 align-items-center msp-method-item">
+                        <div class="col-md-auto">
+                            <input type="radio" id="msp_${mspMethod.gatewayId}"
+                                   name="msp-payment-method"
+                                   value="${mspMethod.gatewayId}"
+                                   data-requires-component="${mspMethod.requiresComponent}"
+                                   ${loopstatus.first ? 'checked' : ''}>
+                        </div>
+                        <div class="col-md-auto p-0 ml-1 mr-3">
+                            <isif condition="${mspMethod.iconUrl}">
+                                <img class="msp-ui-method-logo" title="${mspMethod.name}" alt="${mspMethod.name}" width="50" src="${mspMethod.iconUrl}">
+                            </isif>
+                        </div>
+                        <div class="col">
+                            <label for="msp_${mspMethod.gatewayId}" class="msp-ui-card-name mb-0">${mspMethod.name}</label>
+                        </div>
+                    </div>
+                </isloop>
+            <iselse/>
+                <div class="alert alert-warning">${Resource.msg('msp.error.nomethods', 'multisafepay', 'No payment methods are available for this order. Please contact the store for assistance.')}</div>
+            </isif>
+        </div>
+
+        <!--- Payment Component container (shown only for methods requiring inline input) --->
+        <div id="MultiSafepayPayment" class="mt-3" style="display:none;"></div>
+    </fieldset>
+</div>
+
+<isif condition="${dw.system.Site.current.preferences.custom.Multisafepay_Environment == 'live'}">
+    <isset name="mspSdkBase" value="https://pay.multisafepay.com" scope="page" />
+<iselse/>
+    <isset name="mspSdkBase" value="https://testpay.multisafepay.com" scope="page" />
+</isif>
+
+<link rel="stylesheet" href="${mspSdkBase + '/sdk/components/v2/components.css'}">
+<script src="${mspSdkBase + '/sdk/components/v2/components.js'}"></script>
+
+<script type="text/javascript">
+    window.componentTokenURL = "${URLUtils.https('Multisafepay-GetComponentToken')}";
+    // Read by checkout/giftCard.js for the gift certificate Apply and Remove actions.
+    window.validateGift = "${URLUtils.https('Multisafepay-ValidateGift')}";
+    window.removeGiftCard = "${URLUtils.https('Multisafepay-RemoveGiftCard')}";
+</script>

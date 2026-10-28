@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<!--
+    MultiSafepay override of the base address form.
+
+    Rationale: the base app_storefront_base address.xml restricts the
+    postal code to US ZIP or Canadian formats only, which rejects European
+    alphanumeric postal codes (e.g. the Netherlands "1012 AB"). This override
+    relaxes the postalCode validation to accept both numeric and alphanumeric
+    postal codes while keeping every other field identical to the base form.
+
+    NOTE: SFCC form definitions do not merge — the whole form is overridden, so
+    this file must stay in sync with the base address.xml for non-postalCode
+    fields. The multisafepay cartridge must precede app_storefront_base in the
+    site cartridge path for this override to take effect.
+-->
+<form xmlns="http://www.demandware.com/xml/form/2008-04-19">
+
+    <field formid="addressId" label="label.input.addressid" type="string" mandatory="true"
+    	   max-length="20" missing-error="error.message.required" range-error="error.message.20orless"/>
+    <field formid="firstName" label="label.input.firstname.profile" type="string" mandatory="true" binding="firstName"
+           max-length="50" missing-error="address.firstname.missing" range-error="error.message.50orless"/>
+    <field formid="lastName" label="label.input.lastname.profile" type="string" mandatory="true" binding="lastName" max-length="50"
+           missing-error="address.lastname.missing" range-error="error.message.50orless"/>
+    <field formid="address1" label="label.input.address1" type="string" mandatory="true" binding="address1" max-length="50"
+           missing-error="address.address1.missing" range-error="error.message.50orless"/>
+    <field formid="address2" label="label.input.address2" type="string" mandatory="false" binding="address2"
+           max-length="50" range-error="error.message.50orless"/>
+    <field formid="city" label="label.input.city" type="string" mandatory="true" binding="city" min-length="2"
+           max-length="50" missing-error="address.city.missing" range-error="error.message.between2and50"/>
+
+    <!--  postal code: accept numeric AND alphanumeric international postal codes -->
+    <field formid="postalCode" label="label.input.zipcode" type="string" mandatory="true" min-length="3" max-length="10"
+           regexp="^[A-Za-z0-9][A-Za-z0-9\s\-]{1,9}$"
+           binding="postalCode"
+           range-error="error.message.between3and10"
+           missing-error="address.zipcode.missing"
+           parse-error="error.message.parse.zip"/>
+
+    <!-- use set of supported countries -->
+    <field formid="country" label="label.input.country" type="string" mandatory="true" binding="countryCode"
+           missing-error="address.country.missing">
+        <!--
+            MultiSafepay payment methods are filtered by the billing
+            country. With only US/NL/CN selectable the merchant could not
+            reach the markets the MSP account actually serves, so country-restricted
+            methods were untestable and unreachable for real shoppers.
+            This list covers the EU/EEA + UK + CH markets MultiSafepay supports.
+            Sorted alphabetically by country name.
+        -->
+        <options>
+            <option optionid="AT" label="select.option.country.austria" value="AT"/>
+            <option optionid="BE" label="select.option.country.belgium" value="BE"/>
+            <option optionid="BG" label="select.option.country.bulgaria" value="BG"/>
+            <option optionid="HR" label="select.option.country.croatia" value="HR"/>
+            <option optionid="CY" label="select.option.country.cyprus" value="CY"/>
+            <option optionid="CZ" label="select.option.country.czechia" value="CZ"/>
+            <option optionid="DK" label="select.option.country.denmark" value="DK"/>
+            <option optionid="EE" label="select.option.country.estonia" value="EE"/>
+            <option optionid="FI" label="select.option.country.finland" value="FI"/>
+            <option optionid="FR" label="select.option.country.france" value="FR"/>
+            <option optionid="DE" label="select.option.country.germany" value="DE"/>
+            <option optionid="GR" label="select.option.country.greece" value="GR"/>
+            <option optionid="HU" label="select.option.country.hungary" value="HU"/>
+            <option optionid="IE" label="select.option.country.ireland" value="IE"/>
+            <option optionid="IT" label="select.option.country.italy" value="IT"/>
+            <option optionid="LV" label="select.option.country.latvia" value="LV"/>
+            <option optionid="LT" label="select.option.country.lithuania" value="LT"/>
+            <option optionid="LU" label="select.option.country.luxembourg" value="LU"/>
+            <option optionid="MT" label="select.option.country.malta" value="MT"/>
+            <option optionid="NL" label="select.option.country.netherlands" value="NL"/>
+            <option optionid="NO" label="select.option.country.norway" value="NO"/>
+            <option optionid="PL" label="select.option.country.poland" value="PL"/>
+            <option optionid="PT" label="select.option.country.portugal" value="PT"/>
+            <option optionid="RO" label="select.option.country.romania" value="RO"/>
+            <option optionid="SK" label="select.option.country.slovakia" value="SK"/>
+            <option optionid="SI" label="select.option.country.slovenia" value="SI"/>
+            <option optionid="ES" label="select.option.country.spain" value="ES"/>
+            <option optionid="SE" label="select.option.country.sweden" value="SE"/>
+            <option optionid="CH" label="select.option.country.switzerland" value="CH"/>
+            <option optionid="GB" label="select.option.country.unitedkingdom" value="GB"/>
+            <option optionid="US" label="select.option.country.unitedstates" value="US"/>
+            <option optionid="CN" label="select.option.country.china" value="CN"/>
+        </options>
+    </field>
+
+    <!-- use global state list -->
+    <include formid="states" name="states" missing-error="address.state.missing" parse-error="error.message.required" value-error="error.message.required"/>
+
+    <!-- phone is mandatory for addresses -->
+    <field formid="phone" label="label.input.phonenumber" description="address.phone.example" type="string" mandatory="true"
+           binding="phone" min-length="10" max-length="20"
+           missing-error="address.phone.missing"
+           range-error="error.message.between10and20"
+           parse-error="error.message.parse.phone"/>
+
+    <!-- actions provided by the edit shipping address dialog -->
+    <action formid="apply" valid-form="true"/>
+    <action formid="remove" valid-form="false"/>
+</form>

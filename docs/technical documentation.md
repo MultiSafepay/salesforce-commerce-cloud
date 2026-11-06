@@ -29,7 +29,7 @@ integration (hereinafter **MSP**). The integration provides:
 | Storefront framework | SFRA 6.3.0 (`app_storefront_base`) |
 | Server-side runtime | B2C Commerce script API (`dw.*`) |
 | Client-side | jQuery, Bootstrap 4, MultiSafepay Payment Component SDK (v2) |
-| Build | `sgmf-scripts`, Webpack, SCSS |
+| Build | esbuild (JS), Sass + Autoprefixer (CSS), via `bin/build.js` |
 | Testing | Node.js built-in test runner (connector suite) |
 | CI | GitHub Actions |
 | MSP API | REST JSON v1 (`/v1/json/`) |
@@ -535,21 +535,28 @@ are in `scss/checkout_msp.scss` and `scss/multisafepay.scss`.
 ## 10. Build, deploy and testing
 
 ### Local setup
-1. `npm install`
+1. `npm install` (Node.js 22 or later).
 2. Create `dw.json` in the root with `hostname`, `username`, `password` (WebDAV access key),
-   `code-version`.
-3. `npm run build` compiles the client JS and SCSS of the `multisafepay` cartridge
-   (`packageName` in `package.json`) into its `static` folder. It does not compile the SFRA
-   base cartridges, which must already be built and deployed on the instance.
-4. Upload `multisafepay` and `bm_multisafepay` with `npx sgmf-scripts --uploadCartridge <name>`,
-   or use `npm run watch`. An upload replaces the whole cartridge on the instance.
+   `code-version`, or point the `DW_JSON` variable at a file kept elsewhere.
+3. `npm run build` compiles the client JS and SCSS of the `multisafepay` cartridge into its
+   `static` folder: each `client/<locale>/js/*.js` is bundled and minified by esbuild, each
+   non-partial `client/<locale>/scss/**/*.scss` is compiled by Sass and run through
+   Autoprefixer. It does not compile the SFRA base cartridges, which must already be built
+   and deployed on the instance.
+4. `npm run upload` uploads `multisafepay` and `bm_multisafepay` over WebDAV (zip, upload,
+   unzip on the instance); `npm run upload -- <name>` uploads one. An upload replaces the
+   whole cartridge on the instance.
 
 ### Deploy
 1. Import `metadata/site-import` (Site Import & Export).
-2. Ensure `multisafepay` precedes `app_storefront_base` in the cartridge path (the `address.xml`
-   override and the checkout templates depend on it).
-3. Make sure the `MultiSafepayPayment` payment method has a payment processor and the webhook URL
-   is reachable from MSP.
+2. Ensure `multisafepay` precedes `app_storefront_base` in the storefront cartridge path (the
+   `address.xml` override and the checkout templates depend on it), and that the Business
+   Manager cartridge path contains `bm_multisafepay`, `multisafepay`, `app_storefront_base` and
+   `modules` (the BM controllers require `server`, the CSRF middleware and
+   `multisafepayHelper`).
+3. Create the payment processor `MultiSafepayPayment` and an enabled payment method
+   `MultiSafepayPayment` using it (*Merchant Tools → Ordering*); the metadata does not create
+   them. Make sure the webhook URL is reachable from MSP.
 4. Run **Sync & Import** on the settings page and confirm in Job History that
    `MSP-ImportPaymentMethods` finished OK; until it does, the `MSP_<gatewayId>` methods keep their
    previous country lists.
@@ -560,10 +567,9 @@ are in `scss/checkout_msp.scss` and `scss/multisafepay.scss`.
 |---|---|
 | `npm test` | Connector test suite: `node --test test/msp/*.test.js`. |
 | `npm run test:msp` | Alias of `npm test`. |
-| `npm run compile:js` / `compile:scss` | Compiles client JS / CSS with `--openssl-legacy-provider` (`compileUnix:*` and `compilev16:*` variants exist). |
-| `npm run build` | Compiles JS + fonts + SCSS. |
-| `npm run watch` | Watch + automatic upload. |
-| `npm run lint` | Lints JS + CSS. |
+| `npm run build` | Compiles the `multisafepay` client JS and SCSS (`bin/build.js`). |
+| `npm run build:js` / `build:css` | Compiles only the JS or only the CSS. |
+| `npm run upload` | Uploads `multisafepay` and `bm_multisafepay` (`bin/upload.js`). |
 
 ### Testing
 The connector suite in `test/msp/` runs on Node's built-in test runner and needs no installed
@@ -573,11 +579,6 @@ functions. The suites cover the payment-method mapper (including a recorded `/pa
 response from the MSP test API, `fixtures-payment-methods.json`), the sync and the generated XML,
 the checkout filter, the HTTP calls and verbs, the order payload, the shipment job, and contract
 checks on templates and forms.
-
-### Git hooks (Husky)
-Configured in `package.json`:
-- `pre-commit`: `npm run lint`
-- `pre-push`: `npm run test`
 
 ### CI
 `.github/workflows/test.yml` (GitHub Actions) runs `npm test` on every push and pull request, on

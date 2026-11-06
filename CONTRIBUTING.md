@@ -108,14 +108,16 @@ a comment next to that line.
 
 ```
 npm run build
-npx sgmf-scripts --uploadCartridge multisafepay
-npx sgmf-scripts --uploadCartridge bm_multisafepay
+npm run upload
 ```
 
 An upload replaces the whole cartridge on the instance, so build first: the compiled
-storefront assets of `multisafepay` are not in the repository. `npm run build` compiles
-the `multisafepay` client code only; the SFRA base cartridges are built and deployed on
-their own. After every deploy:
+storefront assets of `multisafepay` are not committed (they are gitignored). `npm run build`
+compiles the `multisafepay` client code only, with esbuild and Sass
+([`bin/build.js`](bin/build.js)); the SFRA base cartridges are built and deployed on
+their own. `npm run upload` ([`bin/upload.js`](bin/upload.js)) reads `dw.json`, or the file
+named by `DW_JSON`, and uploads `multisafepay` and `bm_multisafepay`; pass a cartridge
+name to upload only that one. After every deploy:
 
 1. Import `metadata/site-import`.
 2. Re-run **Sync & Import** on the Multisafepay settings page.

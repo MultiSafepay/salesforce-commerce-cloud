@@ -49,9 +49,19 @@ Before you start you need:
   - MultiSafepay guide: [docs.multisafepay.com/docs/sites](https://docs.multisafepay.com/docs/sites)
 - Access to the SFCC **Business Manager** with permissions on Site Preferences and (for the
   automatic import) on Account Manager / OCAPI.
-- The `multisafepay` and `bm_multisafepay` cartridges installed: `multisafepay` in the
-  storefront site's cartridge path **ahead of** `app_storefront_base`, and `bm_multisafepay`
-  in the Business Manager cartridge path.
+- The `multisafepay` and `bm_multisafepay` cartridges built and uploaded (see the
+  [README](../README.md#installation)), and added to **both** cartridge paths:
+  - the storefront site: `multisafepay` **ahead of** `app_storefront_base`;
+  - Business Manager: `bm_multisafepay` together with `multisafepay`,
+    `app_storefront_base` and `modules`. The Business Manager pages use code from those
+    three cartridges (the SFRA `server` module, the CSRF middleware and the connector's
+    helper), and fail to load without them.
+
+  The same path works for both:
+  `multisafepay:bm_multisafepay:app_storefront_base:bm_app_storefront_base:modules`.
+- The connector is built on **SFRA 6.3.0** and overrides some of its checkout templates,
+  forms and client scripts. A storefront with its own checkout customisations has to merge
+  them.
 
 ---
 
@@ -100,9 +110,9 @@ name to open the job log. The metadata part of the log contains lines like these
 Archive validation completed without errors.
 ============ Starting import unit MetaDataImport
 Importing file instance/msp-metadata-import/meta/system-objecttype-extensions.xml ...
-Processed 3 type-extension elements successfully
+Processed 4 type-extension elements successfully
 Processed 1 custom-type element successfully
-Processed 4 total elements
+Processed 5 total elements
 ============ Import Results (SUMMARY)
 The instance import completed successfully.
 ```
@@ -122,6 +132,18 @@ Custom Object Types** must list **MSPPaymentMethod**.
 > list, and entries there persist — an old **Error** row stays visible and has
 > nothing to do with your import. The Site Import & Export page is the one that
 > matters, and its log is the authority.
+
+### Step 0b — Create the `MultiSafepayPayment` payment method
+
+Every MultiSafepay payment is recorded on one Salesforce payment method,
+`MultiSafepayPayment`. The `MSP_<gateway>` methods that **Sync & Import** creates only
+decide which methods the checkout shows. The metadata import does not create this one,
+and without it an order paid with MultiSafepay cannot be placed.
+
+1. **Merchant Tools → Ordering → Payment Processors**: create a processor with ID
+   `MultiSafepayPayment`.
+2. **Merchant Tools → Ordering → Payment Methods**: create a payment method with ID
+   `MultiSafepayPayment`, set its payment processor to `MultiSafepayPayment`, and enable it.
 
 ### Step 1 — Open the settings page
 In Business Manager: **Merchant Tools → Site Preferences → Multisafepay settings**
@@ -260,8 +282,13 @@ The list shown right after a sync is condensed; reload the page to see all badge
   - the corresponding SFCC payment method (`MSP_<gateway>`), once imported, is **active**
     and applicable (customer group, country, currency, amount range).
 
-  Methods that fail any rule are neither shown nor selectable. Until a billing address is
-  entered, the shipping country (or the storefront locale) is used for the country rule.
+  Methods that fail any rule are neither shown nor selectable.
+
+  The country is the one on the basket **when the checkout page loads**: the billing
+  address if the basket has one, otherwise the shipping address, otherwise the country of
+  the storefront locale. **Known limitation:** the list is not refreshed while the shopper
+  enters or changes an address on the checkout page; it reflects the new country the next
+  time the checkout page loads.
 
 ---
 

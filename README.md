@@ -103,24 +103,32 @@ Key files:
 
 ## Installation
 
+Requires Node.js 22 or later.
+
 1. `npm install`, then create a `dw.json` in the project root with `hostname`, `username`,
-   `password` (a WebDAV access key) and `code-version`. The file is gitignored.
+   `password` (a WebDAV access key) and `code-version`. The file is gitignored; to keep it
+   elsewhere, point the `DW_JSON` variable at it.
 2. Build the connector's storefront assets and upload the two MultiSafepay cartridges:
    ```
    npm run build
-   npx sgmf-scripts --uploadCartridge multisafepay
-   npx sgmf-scripts --uploadCartridge bm_multisafepay
+   npm run upload
    ```
    `npm run build` compiles the client code of `multisafepay` only. The SFRA base
    cartridges (`app_storefront_base`, `bm_app_storefront_base`, `modules`) must already be
    built and deployed on the instance, as on any SFRA site. An upload replaces the whole
-   cartridge on the instance.
-3. Add `multisafepay` and `bm_multisafepay` to the cartridge paths, ahead of the base
-   cartridges, as shown in [Architecture](#architecture).
-4. Import [`metadata/site-import`](metadata/site-import) as a ZIP under
-   *Administration → Site Development → Site Import & Export*.
-5. Open the **Multisafepay settings** page, enter the API keys and click **Sync & Import**.
-6. *(BNPL)* Create a job with the `custom.MSP.NotifyShipments` step and schedule it per site.
+   cartridge on the instance; `npm run upload -- multisafepay` uploads a single one.
+3. Set the cartridge path shown in [Architecture](#architecture) on the storefront site
+   **and** on Business Manager. The Business Manager pages also need `multisafepay`,
+   `app_storefront_base` and `modules` in their path.
+4. Import [`metadata/site-import`](metadata/site-import) under
+   *Administration → Site Development → Site Import & Export*, zipped as
+   `msp-metadata-import.zip` with the files inside a folder of the same name
+   (`msp-metadata-import/`). The importer skips a folder whose name does not match.
+5. Under *Merchant Tools → Ordering*, create the payment processor `MultiSafepayPayment`
+   and an enabled payment method `MultiSafepayPayment` that uses it. Every MultiSafepay
+   payment is recorded on this method.
+6. Open the **Multisafepay settings** page, enter the API keys and click **Sync & Import**.
+7. *(BNPL)* Create a job with the `custom.MSP.NotifyShipments` step and schedule it per site.
 
 The step-by-step guide, including OCAPI and the job, is in the
 [Platform User Guide](docs/platform%20user%20guide.md).
@@ -158,8 +166,10 @@ The same suite runs in CI on every push and pull request
 
 - **Not yet included:** recurring payments and POS / omnichannel (SmartPOS, C-TAP).
   Both are planned for a later release.
-- The payment-method list is built when the billing step loads. Changing the billing
-  country inside the form takes effect when the step is submitted.
+- The payment-method list is built when the checkout page loads, from the country on the
+  basket (billing, then shipping, then the storefront locale). It is not refreshed while
+  the shopper enters or changes an address; the new country applies the next time the
+  checkout page loads.
 
 ---
 
@@ -170,5 +180,6 @@ The same suite runs in CI on every push and pull request
 | [Platform User Guide](docs/platform%20user%20guide.md) | Merchants and operators: setup, sync, capture, refunds, the BNPL job, troubleshooting |
 | [Technical Documentation](docs/technical%20documentation.md) | Developers: payment flow, components, metadata, API reference |
 | [Test Checklist](docs/test-checklist.md) | End-to-end validation scenarios |
+| [Changelog](CHANGELOG.md) | What changed in each release |
 
 <p align="center"><sub>Built on Salesforce Storefront Reference Architecture 6.3.0.</sub></p>

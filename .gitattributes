@@ -1,7 +1,6 @@
 # Enforce consistent line endings across all platforms.
 # Text files are stored and checked out with LF, so ESLint's
-# `linebreak-style` rule and the husky pre-commit/pre-push hooks
-# pass on Windows, macOS and Linux alike.
+# `linebreak-style` rule passes on Windows, macOS and Linux alike.
 * text=auto eol=lf
 
 # Binary assets: never apply line-ending conversion.
